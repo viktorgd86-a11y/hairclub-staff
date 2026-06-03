@@ -1,0 +1,2773 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учёт смен сотрудников</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+
+        .login-container {
+            max-width: 350px; margin: 50px auto; padding: 25px; background: white;
+            border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center;
+        }
+        .login-container h2 { margin-top: 0; margin-bottom: 20px; font-size: 24px; color: #333; }
+        .login-container label { display: block; text-align: left; margin-bottom: 5px; font-weight: bold; }
+        .login-container input {
+            width: 100%; padding: 10px; margin-bottom: 15px;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
+        }
+        .login-container button {
+            background: #2196f3; color: white; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
+        }
+
+        .hidden { display: none; }
+
+        .table-container {
+            overflow-x: auto; overflow-y: auto; max-height: 70vh;
+            margin-top: 20px; border: 1px solid #aaa; background: white;
+        }
+        .manager-table-container {
+            overflow-x: auto; overflow-y: auto; max-height: 40vh;
+            margin-top: 0; border: 1px solid #aaa; background: white;
+        }
+        .manager-title {
+            font-weight: bold; font-size: 14px; margin: 20px 0 5px;
+            padding: 6px 10px; background: #e0e0e0; width: 100%;
+        }
+
+        table { border-collapse: collapse; width: max-content; min-width: 100%; background: white; font-size: 12px; }
+        th, td { border: 1px solid #aaa; padding: 5px 8px; text-align: center; white-space: nowrap; }
+        th { background: #f0f0f0; font-weight: bold; }
+
+        .main-table td:first-child,
+        .main-table th:first-child,
+        .manager-table td:first-child,
+        .manager-table th:first-child {
+            position: sticky; left: 0; background: white; z-index: 20;
+        }
+
+        /* Угловые ячейки thead — top проставляется динамически через fixStickyHeaders() */
+        .main-table thead th,
+        .main-table thead td { position: sticky; z-index: 100; }
+        .main-table thead tr:nth-child(1) th { top: 0; background: #f0f0f0; }
+        .main-table thead tr:nth-child(2) th { background: #fafafa; }
+        .main-table thead tr:nth-child(3) th,
+        .main-table thead tr:nth-child(3) td { background: #fff3e0; }
+        .main-table thead tr:nth-child(4) th,
+        .main-table thead tr:nth-child(4) td { background: #fff3e0; }
+
+        .main-table thead tr th:first-child,
+        .main-table thead tr td:first-child { z-index: 150; }
+
+        .manager-table thead th { position: sticky; z-index: 100; }
+        .manager-table thead tr:nth-child(1) th { top: 0; background: #f0f0f0; }
+        .manager-table thead tr:nth-child(2) th { background: #fafafa; }
+        .manager-table thead tr:nth-child(1) th:first-child,
+        .manager-table thead tr:nth-child(2) th:first-child { z-index: 150; }
+
+        /* Первая ячейка строк категорий наследует цвет от cat-* */
+        .cat-master td:first-child     { background: #c8e6c9 !important; }
+        .cat-admin td:first-child      { background: #bbdefb !important; }
+        .cat-capsulator td:first-child { background: #e1bee7 !important; }
+        .cat-cleaner td:first-child    { background: #fff9c4 !important; }
+        .cat-pomoga td:first-child     { background: #f8bbd0 !important; }
+        .cat-manager td:first-child    { background: #b2dfdb !important; }
+        .cat-upravlyayuschiy td:first-child { background: #ffe0b2 !important; }
+        .cat-assistant td:first-child { background: #e8eaf6 !important; }
+        .cat-smm td:first-child       { background: #fce4ec !important; }
+
+
+
+
+        /* ===== ПОПАП СМЕНЫ ===== */
+        .shift-popup-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.35); z-index: 4000;
+            align-items: center; justify-content: center;
+        }
+        .shift-popup-overlay.show { display: flex; }
+        .shift-popup {
+            background: white; border-radius: 14px; padding: 20px;
+            width: 300px; max-width: 92vw;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .shift-popup-title {
+            font-size: 14px; font-weight: bold; color: #333; margin-bottom: 4px;
+        }
+        .shift-popup-date {
+            font-size: 12px; color: #888; margin-bottom: 14px;
+        }
+        .shift-role-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+        .shift-role-option {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 8px; cursor: pointer;
+            border: 2px solid #eee; transition: all 0.15s;
+        }
+        .shift-role-option:hover { border-color: #7b1fa2; background: #f9f0ff; }
+        .shift-role-option.selected { border-color: #7b1fa2; background: #f3e5f5; }
+        .shift-role-option input[type=radio] { accent-color: #7b1fa2; }
+        .shift-role-label { flex: 1; font-size: 13px; font-weight: bold; }
+        .shift-role-pct { font-size: 12px; color: #7b1fa2; font-weight: bold; }
+        .shift-comment-wrap { margin-bottom: 14px; }
+        .shift-comment-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+        .shift-comment-input {
+            width: 100%; padding: 7px 10px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 13px;
+        }
+        .shift-popup-btns { display: flex; gap: 8px; justify-content: flex-end; }
+        .shift-btn-confirm { background: #43a047; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-remove  { background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-cancel  { background: #e0e0e0; color: #333; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-comment-badge {
+            font-size: 8px; background: #5c6bc0; color: white;
+            border-radius: 3px; padding: 0 3px; margin-left: 2px;
+        }
+        /* ======================== */
+        /* ===== ДВОЙНАЯ ДОЛЖНОСТЬ ===== */
+        .dual-badge {
+            display: inline-block; font-size: 8px; background: #7b1fa2;
+            color: white; border-radius: 3px; padding: 0 3px;
+            vertical-align: middle; margin-left: 2px;
+        }
+        .dual-row td:first-child { border-left: 3px solid #7b1fa2 !important; }
+
+        /* Модальное окно */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45); z-index: 3000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white; border-radius: 16px; padding: 24px;
+            width: 360px; max-width: 95vw; max-height: 85vh;
+            overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal-title {
+            font-size: 16px; font-weight: bold; color: #333;
+            margin-bottom: 16px;
+        }
+        .modal-emp-list {
+            display: flex; flex-direction: column; gap: 6px;
+            margin-bottom: 16px;
+        }
+        .modal-emp-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 8px; cursor: pointer;
+            border: 1px solid #eee; transition: background 0.15s;
+        }
+        .modal-emp-item:hover { background: #f5f5f5; }
+        .modal-emp-item.selected { background: #f3e5f5; border-color: #7b1fa2; }
+        .modal-emp-name { font-size: 13px; font-weight: bold; flex: 1; }
+        .modal-emp-cat { font-size: 11px; color: #888; }
+        .modal-dual-badge { font-size: 10px; background: #7b1fa2; color: white; padding: 2px 6px; border-radius: 4px; }
+        .modal-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .modal-field-row { display: flex; gap: 8px; align-items: center; }
+        .modal-field-label { font-size: 12px; color: #555; width: 70px; flex-shrink: 0; }
+        .modal-field-input {
+            flex: 1; padding: 6px 10px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 13px;
+        }
+        .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+        .modal-btn-save { background: #7b1fa2; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .modal-btn-remove { background: #f44336; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .modal-btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        /* ============================== */
+        /* ===== ПЕРЕХОДНЫЕ СМЕНЫ ===== */
+        .work-cell-alt { background: #fff3e0; cursor: pointer; border: 1px solid #ffb74d; }
+        .work-cell-alt:hover { background: #ffe0b2; }
+        .transition-badge {
+            display: inline-block; font-size: 8px; background: #ff9800;
+            color: white; border-radius: 3px; padding: 0 3px; margin-left: 2px;
+        }
+        /* ============================== */
+        .work-cell { background: #c8e6c9; cursor: pointer; }
+        .work-cell:hover { background: #a5d6a7; }
+        .weekend { background-color: #ffebee; }
+
+        .finance-input {
+            width: 70px; padding: 2px; font-size: 11px; text-align: right;
+            border: 1px solid #ccc; border-radius: 3px;
+        }
+        .fact-input {
+            width: 70px; background: transparent; border: none;
+            text-align: right; font-weight: bold; padding: 2px;
+        }
+        .fact-input:focus { outline: 1px solid #2196f3; background: white; }
+
+        .category-header { font-weight: bold; text-align: left; padding: 6px 8px; }
+
+        /* ===== БЛОК РАСЧЁТА СОТРУДНИКА ===== */
+        .earn-block {
+            background: white; border-radius: 14px; padding: 20px 24px;
+            margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .earn-block-title {
+            font-size: 16px; font-weight: bold; color: #333;
+            margin-bottom: 16px;
+        }
+        .days-grid {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+        }
+        .day-chip {
+            width: 44px; height: 44px; border-radius: 10px;
+            background: #e8f5e9; border: 2px solid #a5d6a7;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: bold; color: #2e7d32;
+        }
+
+        /* ===== ЧИП С КОММЕНТАРИЕМ ===== */
+        .day-chip-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+        }
+        .day-chip-comment {
+            font-size: 9px; font-weight: bold; color: #5c6bc0;
+            white-space: nowrap; max-width: 54px;
+            overflow: hidden; text-overflow: ellipsis;
+            text-align: center;
+        }
+        /* ================================ */
+        .day-chip.weekend {
+            background: #fce4ec; border-color: #f48fb1; color: #880e4f;
+        }
+        .earn-summary {
+            display: flex; gap: 12px; flex-wrap: wrap;
+        }
+        .earn-card {
+            background: #f5f5f5; border-radius: 10px;
+            padding: 10px 16px; display: inline-flex;
+            flex-direction: column; min-width: 0;
+        }
+        .earn-card-label {
+            font-size: 11px; color: #888; margin-bottom: 3px; white-space: nowrap;
+        }
+        .earn-card-value {
+            font-size: 20px; font-weight: bold; color: #333; white-space: nowrap;
+        }
+        .earn-card.accent { background: #e8f5e9; }
+        .earn-card.accent .earn-card-value { color: #2e7d32; }
+
+        /* ===== ЦВЕТА КАТЕГОРИЙ — фон всей строки ===== */
+        .cat-master td      { background: #c8e6c9 !important; color: #1b5e20; font-weight: bold; }
+        .cat-admin td       { background: #bbdefb !important; color: #0d47a1; font-weight: bold; }
+        .cat-capsulator td  { background: #e1bee7 !important; color: #4a148c; font-weight: bold; }
+        .cat-cleaner td     { background: #fff9c4 !important; color: #e65100; font-weight: bold; }
+        .cat-pomoga td      { background: #f8bbd0 !important; color: #880e4f; font-weight: bold; }
+        .cat-manager td     { background: #b2dfdb !important; color: #004d40; font-weight: bold; }
+        .cat-upravlyayuschiy td { background: #ffe0b2 !important; color: #bf360c; font-weight: bold; }
+        .cat-assistant td { background: #e8eaf6 !important; color: #283593; font-weight: bold; }
+        .cat-smm td       { background: #fce4ec !important; color: #880e4f; font-weight: bold; }
+        /* ============================================== */
+
+
+        .fact-cell-good { background-color: #c8e6c9; }
+        .fact-cell-bad { background-color: #ffcdd2; }
+        .earn-per-day { display: block; font-size: 9px; color: #2c3e50; margin-top: 2px; }
+
+        .earnings-block {
+            background: #e3f2fd; padding: 15px; margin-top: 20px;
+            border-radius: 8px; font-weight: bold;
+        }
+
+        button {
+            margin: 5px; padding: 8px 16px; background: #2196f3;
+            color: white; border: none; border-radius: 6px; cursor: pointer;
+        }
+        .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .logout-btn { background: #f44336; }
+        .refresh-btn { background: #4caf50; }
+        .warning { color: #f44336; font-size: 12px; margin-top: 5px; }
+        .welcome { margin-bottom: 12px; font-size: 20px; color: #333; font-weight: bold; }
+        .app-header { background: white; border-radius: 12px; padding: 18px 24px 14px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+        .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+            background: white; border-radius: 12px; padding: 10px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; font-weight: bold;
+            display: flex; align-items: center; gap: 10px; z-index: 2000;
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+            opacity: 0; pointer-events: none; white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast-icon { font-size: 18px; }
+        .toast-text { color: #333; }
+        .toast.success { border-left: 4px solid #4caf50; }
+        .toast.error   { border-left: 4px solid #f44336; }
+        .toast.loading { border-left: 4px solid #2196f3; }
+
+
+        /* ===== БЛОК ПОКАЗАТЕЛЕЙ ===== */
+        .metrics-block {
+            background: white; border-radius: 14px; padding: 20px 24px;
+            margin-top: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .metrics-title {
+            font-size: 15px; font-weight: bold; color: #333; margin-bottom: 16px;
+        }
+        .metrics-section-label {
+            font-size: 11px; font-weight: bold; color: #888;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin: 16px 0 8px;
+        }
+        .metrics-cards {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;
+        }
+        .metrics-card {
+            background: #f5f5f5; border-radius: 10px;
+            padding: 10px 16px; display: inline-flex;
+            flex-direction: column; min-width: 0;
+        }
+        .metrics-card-label {
+            font-size: 11px; color: #888; margin-bottom: 3px; white-space: nowrap;
+        }
+        .metrics-card-value {
+            font-size: 20px; font-weight: bold; color: #333; white-space: nowrap;
+        }
+        .metrics-card.good .metrics-card-value { color: #2e7d32; }
+        .metrics-card.warn .metrics-card-value { color: #e65100; }
+        .metrics-card.bad  .metrics-card-value { color: #c62828; }
+        .chart-wrap {
+            width: 100%; overflow-x: auto; margin-top: 8px;
+        }
+        .chart-svg { display: block; }
+        /* ============================== */
+
+        /* ===== ВКЛАДКИ ===== */
+        .tabs {
+            display: flex; gap: 4px; margin-bottom: 0;
+        }
+        .tab-btn {
+            padding: 8px 20px; border-radius: 8px 8px 0 0;
+            background: #e0e0e0; color: #555; border: none;
+            cursor: pointer; font-size: 13px; font-weight: bold;
+            margin: 0; transition: background 0.2s;
+        }
+        .tab-btn.active { background: white; color: #1976d2; border-bottom: 2px solid white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== ТАБЛИЦА ПОКАЗАТЕЛЕЙ ===== */
+        .metrics-admin-block {
+            background: white; border-radius: 0 12px 12px 12px;
+            padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            margin-top: 0;
+        }
+        .metrics-admin-controls {
+            display: flex; gap: 12px; align-items: center;
+            flex-wrap: wrap; margin-bottom: 20px;
+        }
+        .metrics-section {
+            margin-bottom: 24px;
+        }
+        .metrics-section-title {
+            font-size: 14px; font-weight: bold; color: #555;
+            margin-bottom: 10px; padding: 6px 10px;
+            background: #f5f5f5; border-radius: 6px;
+        }
+        .metrics-grid {
+            display: grid; gap: 8px;
+        }
+        .metrics-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px; background: #fafafa;
+            border-radius: 8px; flex-wrap: wrap;
+            width: fit-content; min-width: 0;
+        }
+        .metrics-row-name {
+            font-size: 13px; font-weight: bold; color: #333;
+            min-width: 120px; max-width: 160px; width: 140px;
+        }
+        .metrics-fields {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .metrics-field-wrap {
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .metrics-field-label {
+            font-size: 10px; color: #888;
+        }
+        .metrics-field-input {
+            width: 90px; padding: 5px 8px; font-size: 13px;
+            border: 1px solid #ddd; border-radius: 6px;
+            text-align: right;
+        }
+        .metrics-field-input:focus { outline: 2px solid #2196f3; border-color: #2196f3; }
+
+        .metrics-manager-section-label {
+            font-size: 11px; font-weight: bold; color: #00897b;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin: 8px 0 4px; padding: 0 2px;
+        }
+        .metrics-field-readonly {
+            width: 90px; padding: 5px 8px; font-size: 13px;
+            background: #f0f4ff; border: 1px solid #c5cae9;
+            border-radius: 6px; text-align: right;
+            font-weight: bold; color: #283593;
+        }
+
+        /* ================================= */
+
+        /* ===== ПОДВКЛАДКИ ПОКАЗАТЕЛЕЙ ===== */
+        .metrics-sub-tabs {
+            display: flex; gap: 4px; margin-bottom: 16px;
+        }
+        .metrics-sub-btn {
+            padding: 7px 16px; border-radius: 8px;
+            background: #e0e0e0; color: #555; border: none;
+            cursor: pointer; font-size: 13px; font-weight: bold;
+            margin: 0; transition: background 0.2s;
+        }
+        .metrics-sub-btn.active { background: #1976d2; color: white; }
+
+        /* ===== ЦВЕТА КАТЕГОРИЙ В ПОКАЗАТЕЛЯХ ===== */
+        .metrics-cat-master   { background: #e8f5e9; border-left: 4px solid #43a047; }
+        .metrics-cat-admin    { background: #e3f2fd; border-left: 4px solid #1976d2; }
+        .metrics-cat-manager  { background: #e0f2f1; border-left: 4px solid #00897b; }
+        .metrics-cat-label {
+            font-size: 12px; font-weight: bold; padding: 6px 12px;
+            border-radius: 6px; margin: 12px 0 6px;
+        }
+        .metrics-cat-label.master  { background: #c8e6c9; color: #1b5e20; }
+        .metrics-cat-label.admin   { background: #bbdefb; color: #0d47a1; }
+        .metrics-cat-label.manager { background: #b2dfdb; color: #004d40; }
+        /* ========================================= */
+
+        /* ===== ИТОГИ В ЕЖЕДНЕВНЫХ ПОКАЗАТЕЛЯХ ===== */
+        .metrics-totals {
+            display: flex; flex-direction: column; gap: 4px;
+            padding: 6px 10px; background: rgba(255,255,255,0.7);
+            border-radius: 6px; border-left: 2px solid #ddd;
+            margin-left: 4px;
+        }
+        .metrics-total-item { font-size: 12px; white-space: nowrap; }
+        .metrics-total-label { color: #888; }
+        .metrics-total-value { font-weight: bold; color: #333; }
+        .metrics-total-date { color: #aaa; font-size: 11px; }
+        /* ============================================ */
+        /* ===== НУМЕРОЛОГИЯ ===== */
+        .numerology-block {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e8eaf6 100%);
+            border-radius: 14px; padding: 20px 24px; margin-top: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: relative;
+            overflow: hidden;
+        }
+        .numerology-block::before {
+            content: '✨'; position: absolute; right: 16px; top: 12px;
+            font-size: 28px; opacity: 0.4;
+        }
+        .numerology-title {
+            font-size: 13px; color: #7b1fa2; font-weight: bold;
+            margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .numerology-number {
+            font-size: 36px; font-weight: bold; color: #6a1b9a;
+            line-height: 1; margin-bottom: 10px;
+        }
+        .numerology-text {
+            font-size: 14px; color: #4a148c; line-height: 1.6;
+        }
+        .numerology-loading {
+            font-size: 13px; color: #9c27b0; font-style: italic;
+        }
+        /* ========================= */
+
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+        @media (max-width: 700px) {
+            body { margin: 10px; }
+
+            /* Шапка */
+            .app-header { padding: 14px 16px 12px; border-radius: 10px; }
+            .welcome { font-size: 17px; margin-bottom: 10px; }
+            .controls { gap: 8px; }
+            .controls label { font-size: 13px; }
+            .controls select, .controls input[type=number] { font-size: 13px; padding: 5px; }
+            button { padding: 7px 12px; font-size: 13px; margin: 3px; }
+
+            /* Таблица — горизонтальный скролл, но с улучшениями для тапа */
+            .table-container { max-height: 55vh; }
+            .manager-table-container { max-height: 35vh; }
+            table { font-size: 11px; }
+            th, td { padding: 6px 5px; min-width: 30px; }
+
+            /* Ячейки смен — крупнее для пальца */
+            .work-cell { min-width: 34px; min-height: 34px; }
+
+            /* Инпуты план/факт компактнее */
+            .finance-input { width: 54px; font-size: 10px; }
+            .fact-input { width: 54px; font-size: 10px; }
+
+            /* Блок расчёта сотрудника */
+            .earn-block { padding: 16px; border-radius: 12px; }
+            .earn-block-title { font-size: 15px; }
+            .day-chip { width: 38px; height: 38px; font-size: 14px; border-radius: 8px; }
+            .days-grid { gap: 6px; }
+            .earn-card-value { font-size: 18px; }
+
+            /* Футер */
+            .footer { font-size: 11px; }
+
+            /* Заголовок Администрация */
+            .manager-title { font-size: 13px; }
+
+            /* Таблица администрации */
+            .manager-table { font-size: 12px; }
+
+            /* Toast выше на мобиле */
+            .toast {
+                top: auto;
+                bottom: 24px;
+                transform: translateX(-50%) translateY(80px);
+                font-size: 13px;
+                padding: 10px 18px;
+                border-radius: 10px;
+                max-width: 85vw;
+                white-space: normal;
+                text-align: center;
+            }
+            .toast.show { transform: translateX(-50%) translateY(0); }
+        }
+
+        @media (max-width: 400px) {
+            .day-chip { width: 34px; height: 34px; font-size: 13px; }
+            .earn-card { padding: 8px 12px; }
+            .earn-card-value { font-size: 16px; }
+        }
+        /* ================================ */
+    </style>
+</head>
+<body>
+
+<!-- ===== ФОРМА ВХОДА ===== -->
+<div id="loginDiv" class="login-container">
+    <h2>Вход в систему</h2>
+    <label>Логин:</label>
+    <input type="text" id="loginInput" autocomplete="username" />
+    <label>Пароль:</label>
+    <input type="password" id="passInput" autocomplete="current-password" />
+    <button onclick="doLogin()">Войти</button>
+    <div id="loginError" class="warning"></div>
+</div>
+
+<!-- ===== ОСНОВНОЕ ПРИЛОЖЕНИЕ ===== -->
+<div id="appDiv" class="hidden">
+    <div class="app-header">
+    <div id="welcomeMsg" class="welcome"></div>
+    <div class="controls" style="margin-bottom:0;">
+        <label>Месяц: <select id="monthSelect"></select></label>
+        <label>Год: <input type="number" id="yearInput" value="2026" min="2026" style="width:80px" /></label>
+        <button onclick="refreshData()" class="refresh-btn">🔄 Обновить</button>
+        <button id="dualRoleBtn" onclick="openDualRoleModal()" style="display:none;background:#7b1fa2;">👥 Двойная должность</button>
+        <button onclick="logout()" class="logout-btn">Выйти</button>
+    </div>
+    </div>
+
+    <!-- Вкладки (только для admin) -->
+    <div id="tabsBar" style="display:none;" class="tabs">
+        <button class="tab-btn active" onclick="switchTab('schedule')">📅 График</button>
+        <button class="tab-btn" onclick="switchTab('metrics')">📊 Показатели</button>
+    </div>
+
+    <!-- Вкладка: График -->
+    <div id="tabSchedule" class="tab-content active">
+        <div id="mainTableContainer" class="table-container"></div>
+        <div id="mobileScheduleContainer" style="display:none;"></div>
+        <div id="managerSection" style="display:none;">
+            <div class="manager-title">📋 Администрация</div>
+            <div id="managerTableContainer" class="manager-table-container"></div>
+        </div>
+    </div>
+
+    <!-- Вкладка: Показатели (только admin) -->
+    <div id="tabMetrics" class="tab-content">
+        <div class="metrics-admin-block">
+            <div class="metrics-admin-controls">
+                <label id="metricsDateLabel">Дата: <input type="date" id="metricsDateInput" /></label>
+                <label id="metricsMonthLabel" style="display:none;">Месяц: <input type="month" id="metricsMonthInput" /></label>
+                <button onclick="loadMetricsAdmin()" class="refresh-btn">🔄 Загрузить</button>
+            </div>
+            <div class="metrics-sub-tabs">
+                <button class="metrics-sub-btn active" onclick="switchMetricsTab('daily')">📅 Ежедневные</button>
+                <button class="metrics-sub-btn" onclick="switchMetricsTab('monthly')">📆 Ежемесячные</button>
+            </div>
+            <div id="metricsAdminContent"></div>
+        </div>
+    </div>
+
+    <div id="earningsDiv" class="earnings-block"></div>
+    <div id="metricsDiv"></div>
+    <div id="numerologyDiv"></div>
+
+
+</div>
+
+<!-- ===== ПОПАП СМЕНЫ: ДВОЙНАЯ ДОЛЖНОСТЬ ===== -->
+<div id="shiftPopupOverlay" class="shift-popup-overlay">
+    <div class="shift-popup">
+        <div class="shift-popup-title" id="shiftPopupName"></div>
+        <div class="shift-popup-date" id="shiftPopupDate"></div>
+        <div class="shift-role-options" id="shiftRoleOptions"></div>
+        <div class="shift-comment-wrap">
+            <div class="shift-comment-label">Комментарий (необязательно)</div>
+            <input class="shift-comment-input" id="shiftCommentInput" type="text" placeholder="Например: за администратора">
+        </div>
+        <div class="shift-popup-btns">
+            <button class="shift-btn-cancel" onclick="closeShiftPopup()">Отмена</button>
+            <button class="shift-btn-remove" id="shiftRemoveBtn" style="display:none;" onclick="confirmShiftRemove()">Снять смену</button>
+            <button class="shift-btn-confirm" onclick="confirmShiftPopup()">✓ Поставить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: ДВОЙНАЯ ДОЛЖНОСТЬ ===== -->
+<div id="dualRoleModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title">👥 Двойная должность</div>
+        <div style="font-size:12px;color:#888;margin-bottom:12px;">Выберите сотрудника и укажите два процента с подписями</div>
+        <div id="dualEmpList" class="modal-emp-list"></div>
+        <div id="dualFields" class="modal-fields" style="display:none;">
+            <div style="font-size:12px;font-weight:bold;color:#7b1fa2;margin-bottom:4px;" id="dualSelectedName"></div>
+            <div class="modal-field-row">
+                <span class="modal-field-label">Процент 1</span>
+                <input class="modal-field-input" id="dualP1" type="number" step="0.1" placeholder="2.7">
+                <input class="modal-field-input" id="dualL1" type="text" placeholder="За мастера" style="flex:1.5;">
+            </div>
+            <div class="modal-field-row">
+                <span class="modal-field-label">Процент 2</span>
+                <input class="modal-field-input" id="dualP2" type="number" step="0.1" placeholder="3.0">
+                <input class="modal-field-input" id="dualL2" type="text" placeholder="За администратора" style="flex:1.5;">
+            </div>
+        </div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeDualRoleModal()">Отмена</button>
+            <button class="modal-btn-remove" id="dualRemoveBtn" style="display:none;" onclick="removeDualRoleAction()">Убрать</button>
+            <button class="modal-btn-save" id="dualSaveBtn" style="display:none;" onclick="saveDualRoleAction()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"><span class="toast-icon" id="toastIcon"></span><span class="toast-text" id="toastText"></span></div>
+
+<script>
+/* ============================================================
+   НАСТРОЙКА: ваш URL Apps Script
+   ============================================================ */
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby77sMJSVOa1sYsAvnEOjmqLuLjSyWmyAvMJEhwW26tL-rF6Tp3CUO6Pn-jv0P2Hdzm/exec';
+
+/* ============================================================
+   ЦВЕТА КАТЕГОРИЙ
+   ============================================================ */
+var CATEGORY_CLASSES = {
+    'Мастер':        'cat-master',
+    'Администратор': 'cat-admin',
+    'Капсулятор':    'cat-capsulator',
+    'Уборщица':      'cat-cleaner',
+    'Подмога':       'cat-pomoga',
+    'Управляющий':   'cat-upravlyayuschiy',
+    'Менеджер':      'cat-manager',
+    'Ассистент':     'cat-assistant',
+    'SMM':           'cat-smm',
+};
+
+/* ============================================================
+   ПАДЕЖИ КАТЕГОРИЙ (родительный падеж)
+   ============================================================ */
+var CATEGORY_GENITIVE = {
+    'Мастер':        'Мастера',
+    'Администратор': 'Администратора',
+    'Капсулятор':    'Капсулятора',
+    'Уборщица':      'Уборщицы',
+    'Подмога':       'Подмоги',
+    'Управляющий':   'Управляющего',
+    'Менеджер':      'Менеджера',
+    'Ассистент':     'Ассистента',
+    'SMM':           'SMM',
+};
+
+/* ============================================================
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+   ============================================================ */
+var currentUser = null;
+var currentScheduleData = [];
+var currentFinanceData = [];
+var employeesMap = new Map();
+var percentHistory = [];
+var categoryHistory = [];
+var dualRoles = [];
+var dailyMetrics = [];
+var monthlyMetrics = [];
+
+var poolCategories = ['Мастер', 'Администратор', 'Капсулятор'];
+var fixedParticipating = ['Уборщица'];
+var fixedNonParticipating = ['Управляющий', 'Менеджер', 'Ассистент', 'SMM', 'Подмога'];
+var allCategories = poolCategories.concat(fixedParticipating, fixedNonParticipating);
+
+/* ============================================================
+   ОТЛАДКА — покажет ошибки прямо на странице
+   ============================================================ */
+function debugLog(msg) {
+    console.log(msg);
+}
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+function formatNumber(num) {
+    if (num === undefined || num === null) return '0';
+    return Math.round(num).toLocaleString('ru-RU');
+}
+
+function formatInputNumber(value) {
+    var num = parseFloat(value);
+    return isNaN(num) ? '' : num.toLocaleString('ru-RU');
+}
+
+function parseInputNumber(str) {
+    var cleaned = str.replace(/\s/g, '').replace(',', '.');
+    var num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+}
+
+var toastTimer = null;
+function showStatus(msg, isError) {
+    var toast = document.getElementById('toast');
+    var icon = document.getElementById('toastIcon');
+    var text = document.getElementById('toastText');
+    var isLoading = !isError && (msg.indexOf('...') !== -1 || msg.indexOf('Загрузк') !== -1 || msg.indexOf('Входим') !== -1);
+    toast.className = 'toast ' + (isError ? 'error' : isLoading ? 'loading' : 'success');
+    icon.textContent = isError ? '❌' : isLoading ? '⏳' : '✅';
+    text.textContent = msg;
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    var delay = isError ? 5000 : isLoading ? 60000 : 2000;
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, delay);
+}
+
+function toYMD(dateValue) {
+    if (!dateValue) return '';
+    var str = String(dateValue);
+    var match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) return match[1] + '-' + match[2] + '-' + match[3];
+    var d = new Date(dateValue);
+    if (isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+}
+
+function localDate(dateStr) {
+    var parts = dateStr.split('-').map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
+function isWeekendDate(dateStr) {
+    var d = localDate(dateStr);
+    return d.getDay() === 0 || d.getDay() === 6;
+}
+
+function dayOfWeekShort(dateStr) {
+    var d = localDate(dateStr);
+    return ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()];
+}
+
+function getSelectedMonth() {
+    return parseInt(document.getElementById('monthSelect').value, 10);
+}
+
+function getSelectedYear() {
+    return parseInt(document.getElementById('yearInput').value, 10);
+}
+
+/* ============================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ============================================================ */
+function initMonths() {
+    var months = [
+        'Январь','Февраль','Март','Апрель','Май','Июнь',
+        'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'
+    ];
+    var select = document.getElementById('monthSelect');
+    select.innerHTML = '';
+    for (var idx = 0; idx < months.length; idx++) {
+        var opt = document.createElement('option');
+        opt.value = idx + 1;
+        opt.textContent = months[idx];
+        if (idx + 1 === new Date().getMonth() + 1) opt.selected = true;
+        select.appendChild(opt);
+    }
+    select.addEventListener('change', function() {
+        if (currentUser) renderAll();
+    });
+
+    var yearInput = document.getElementById('yearInput');
+    yearInput.addEventListener('change', function() {
+        if (parseInt(this.value, 10) < 2026) this.value = 2026;
+        if (currentUser) renderAll();
+    });
+    yearInput.addEventListener('blur', function() {
+        if (parseInt(this.value, 10) < 2026) this.value = 2026;
+    });
+
+    document.getElementById('passInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('loginInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('passInput').focus();
+    });
+}
+
+/* ============================================================
+   ПОЛУЧИТЬ ПРОЦЕНТ СОТРУДНИКА НА КОНКРЕТНУЮ ДАТУ
+   ============================================================ */
+function getPercentForDate(login, date, empMap) {
+    var best = null;
+    for (var i = 0; i < percentHistory.length; i++) {
+        var h = percentHistory[i];
+        if (h.login === login && h.date_from <= date) {
+            if (!best || h.date_from > best.date_from) {
+                best = h;
+            }
+        }
+    }
+    if (best) return best.percent;
+    var info = empMap.get(login);
+    return (info && info.percent) || 0;
+}
+
+/* ============================================================
+   ПОЛУЧИТЬ КАТЕГОРИЮ СОТРУДНИКА НА КОНКРЕТНУЮ ДАТУ
+   ============================================================ */
+function getCategoryForDate(login, date) {
+    var best = null;
+    for (var i = 0; i < categoryHistory.length; i++) {
+        var h = categoryHistory[i];
+        if (h.login === login && h.date_from <= date) {
+            if (!best || h.date_from > best.date_from) {
+                best = h;
+            }
+        }
+    }
+    if (best) return best.category;
+    // Фоллбэк — текущая категория из таблицы
+    var info = employeesMap.get(login);
+    return (info && info.category) || '';
+}
+
+/* ============================================================
+   ПОПАП СМЕНЫ ДЛЯ ДВОЙНЫХ СОТРУДНИКОВ
+   ============================================================ */
+var shiftPopupData = null; // { empLogin, date, fullname, dualRole, curEntry }
+
+function openShiftPopup(empLogin, date, fullname, dualRole, curEntry) {
+    shiftPopupData = { empLogin: empLogin, date: date, fullname: fullname, dualRole: dualRole, curEntry: curEntry };
+
+    document.getElementById('shiftPopupName').textContent = fullname;
+
+    // Форматируем дату
+    var parts = date.split('-');
+    var months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    document.getElementById('shiftPopupDate').textContent = parseInt(parts[2]) + ' ' + months[parseInt(parts[1])-1] + ' ' + parts[0];
+
+    // Опции ролей
+    var opts = document.getElementById('shiftRoleOptions');
+    opts.innerHTML = '';
+    var curOverride = curEntry ? (curEntry.percentOverride || 0) : 0;
+
+    [
+        { pct: dualRole.percent1, label: dualRole.label1 },
+        { pct: dualRole.percent2, label: dualRole.label2 }
+    ].forEach(function(opt, i) {
+        var isSelected = curEntry && curEntry.isWork &&
+            (i === 0 ? curOverride === 0 || curOverride === opt.pct : curOverride === opt.pct);
+        var div = document.createElement('div');
+        div.className = 'shift-role-option' + (isSelected ? ' selected' : '');
+        div.innerHTML =
+            '<input type="radio" name="shiftRole" value="' + opt.pct + '" id="shiftRole' + i + '"' +
+            (isSelected ? ' checked' : '') + '>' +
+            '<label class="shift-role-label" for="shiftRole' + i + '">' + (opt.label || 'Роль ' + (i+1)) + '</label>' +
+            '<span class="shift-role-pct">' + opt.pct + '%</span>';
+        div.onclick = function() {
+            document.querySelectorAll('.shift-role-option').forEach(function(el) { el.classList.remove('selected'); });
+            div.classList.add('selected');
+            div.querySelector('input').checked = true;
+        };
+        opts.appendChild(div);
+    });
+
+    // Комментарий
+    document.getElementById('shiftCommentInput').value = curEntry ? (curEntry.shiftComment || '') : '';
+
+    // Кнопка "Снять"
+    document.getElementById('shiftRemoveBtn').style.display = (curEntry && curEntry.isWork) ? '' : 'none';
+
+    document.getElementById('shiftPopupOverlay').classList.add('show');
+}
+
+function closeShiftPopup() {
+    document.getElementById('shiftPopupOverlay').classList.remove('show');
+    shiftPopupData = null;
+}
+
+function confirmShiftPopup() {
+    if (!shiftPopupData) return;
+    var selected = document.querySelector('input[name="shiftRole"]:checked');
+    if (!selected) { showStatus('Выберите роль', true); return; }
+    var pct = parseFloat(selected.value) || 0;
+    var comment = document.getElementById('shiftCommentInput').value.trim();
+
+    // Определяем override: если выбран percent1 — override = percent1 (чтобы отличать от "обычной" смены)
+    var override = pct;
+
+    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, true, override, comment);
+    closeShiftPopup();
+}
+
+function confirmShiftRemove() {
+    if (!shiftPopupData) return;
+    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, false, 0, '');
+    closeShiftPopup();
+}
+
+function saveShiftWithOverride(empLogin, date, isWork, percentOverride, shiftComment) {
+    // Обновляем локально
+    var found = false;
+    for (var i = 0; i < currentScheduleData.length; i++) {
+        var s = currentScheduleData[i];
+        if (s.date === date && s.empLogin === empLogin) {
+            s.isWork = isWork; s.percentOverride = percentOverride; s.shiftComment = shiftComment;
+            found = true; break;
+        }
+    }
+    if (!found) currentScheduleData.push({ date: date, empLogin: empLogin, isWork: isWork, percentOverride: percentOverride, shiftComment: shiftComment });
+
+    renderAll();
+
+    var url = SCRIPT_URL + '?action=updateSchedule&role=admin' +
+        '&date=' + encodeURIComponent(date) +
+        '&empLogin=' + encodeURIComponent(empLogin) +
+        '&isWork=' + isWork +
+        '&percentOverride=' + (percentOverride || 0) +
+        '&shiftComment=' + encodeURIComponent(shiftComment);
+
+    fetch(url, { redirect: 'follow' })
+        .then(function(r) { return r.json(); })
+        .then(function(res) { showStatus(res.success ? '✓ Сохранено' : 'Ошибка', !res.success); })
+        .catch(function() { showStatus('Ошибка сети', true); });
+}
+
+/* ============================================================
+   ДВОЙНАЯ ДОЛЖНОСТЬ — МОДАЛЬНОЕ ОКНО
+   ============================================================ */
+var dualSelectedLogin = null;
+
+function getDualRole(login) {
+    for (var i = 0; i < dualRoles.length; i++) {
+        if (dualRoles[i].login === login) return dualRoles[i];
+    }
+    return null;
+}
+
+function openDualRoleModal() {
+    dualSelectedLogin = null;
+    document.getElementById('dualFields').style.display = 'none';
+    document.getElementById('dualSaveBtn').style.display = 'none';
+    document.getElementById('dualRemoveBtn').style.display = 'none';
+
+    // Строим список сотрудников из пула (Мастер, Администратор, Капсулятор)
+    var listEl = document.getElementById('dualEmpList');
+    listEl.innerHTML = '';
+
+    var poolEmps = [];
+    for (var entry of employeesMap.entries()) {
+        var login = entry[0];
+        var info = entry[1];
+        if (['Мастер','Администратор','Капсулятор'].indexOf(info.category) !== -1) {
+            poolEmps.push({ login: login, fullname: info.fullname, category: info.category });
+        }
+    }
+    poolEmps.sort(function(a,b) { return a.fullname > b.fullname ? 1 : -1; });
+
+    poolEmps.forEach(function(emp) {
+        var dr = getDualRole(emp.login);
+        var item = document.createElement('div');
+        item.className = 'modal-emp-item' + (dr ? ' selected' : '');
+        item.innerHTML =
+            '<span class="modal-emp-name">' + emp.fullname + '</span>' +
+            '<span class="modal-emp-cat">' + emp.category + '</span>' +
+            (dr ? '<span class="modal-dual-badge">2 ставки</span>' : '');
+        item.onclick = (function(e) {
+            return function() { selectDualEmp(e.login, e.fullname, e.category); };
+        })(emp);
+        listEl.appendChild(item);
+    });
+
+    document.getElementById('dualRoleModal').classList.add('show');
+}
+
+function selectDualEmp(login, fullname, category) {
+    dualSelectedLogin = login;
+
+    // Подсветка
+    document.querySelectorAll('.modal-emp-item').forEach(function(el) { el.classList.remove('selected'); });
+    event.currentTarget.classList.add('selected');
+
+    // Заполняем поля
+    var dr = getDualRole(login);
+    document.getElementById('dualSelectedName').textContent = fullname + ' (' + category + ')';
+    document.getElementById('dualP1').value = dr ? dr.percent1 : '';
+    document.getElementById('dualL1').value = dr ? dr.label1 : 'За ' + category.toLowerCase();
+    document.getElementById('dualP2').value = dr ? dr.percent2 : '';
+    document.getElementById('dualL2').value = dr ? dr.label2 : '';
+    document.getElementById('dualFields').style.display = '';
+    document.getElementById('dualSaveBtn').style.display = '';
+    document.getElementById('dualRemoveBtn').style.display = dr ? '' : 'none';
+}
+
+function closeDualRoleModal() {
+    document.getElementById('dualRoleModal').classList.remove('show');
+    dualSelectedLogin = null;
+}
+
+function saveDualRoleAction() {
+    if (!dualSelectedLogin) return;
+    var p1 = parseFloat(document.getElementById('dualP1').value) || 0;
+    var l1 = document.getElementById('dualL1').value.trim();
+    var p2 = parseFloat(document.getElementById('dualP2').value) || 0;
+    var l2 = document.getElementById('dualL2').value.trim();
+    if (!p1 || !p2) { showStatus('Укажите оба процента', true); return; }
+
+    // Обновляем локально
+    var existing = getDualRole(dualSelectedLogin);
+    if (existing) {
+        existing.percent1 = p1; existing.label1 = l1;
+        existing.percent2 = p2; existing.label2 = l2;
+    } else {
+        dualRoles.push({ login: dualSelectedLogin, percent1: p1, label1: l1, percent2: p2, label2: l2 });
+    }
+
+    var url = SCRIPT_URL + '?action=saveDualRole&role=admin' +
+        '&login=' + encodeURIComponent(dualSelectedLogin) +
+        '&percent1=' + p1 + '&label1=' + encodeURIComponent(l1) +
+        '&percent2=' + p2 + '&label2=' + encodeURIComponent(l2);
+
+    fetch(url, { redirect: 'follow' }).then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) { showStatus('✓ Сохранено'); closeDualRoleModal(); renderAll(); }
+            else showStatus('Ошибка: ' + (res.error||''), true);
+        }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+function removeDualRoleAction() {
+    if (!dualSelectedLogin) return;
+    dualRoles = dualRoles.filter(function(d) { return d.login !== dualSelectedLogin; });
+
+    var url = SCRIPT_URL + '?action=removeDualRole&role=admin&login=' + encodeURIComponent(dualSelectedLogin);
+    fetch(url, { redirect: 'follow' }).then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) { showStatus('✓ Убрано'); closeDualRoleModal(); renderAll(); }
+            else showStatus('Ошибка', true);
+        }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+/* ============================================================
+   ПОЛУЧИТЬ ВСЕ ПРОЦЕНТЫ СОТРУДНИКА ЗА МЕСЯЦ (для переходного периода)
+   ============================================================ */
+function getMonthPercents(login, monthPrefix) {
+    var monthStart = monthPrefix + '-01';
+    var parts = monthPrefix.split('-');
+    var yr = parseInt(parts[0]), mo = parseInt(parts[1]);
+    var monthEnd = yr + '-' + String(mo).padStart(2,'0') + '-' + String(new Date(yr, mo, 0).getDate()).padStart(2,'0');
+
+    // Процент в начале месяца
+    var pStart = getPercentForDate(login, monthStart, employeesMap);
+    var percents = [pStart];
+
+    // Ищем изменения внутри месяца
+    for (var i = 0; i < percentHistory.length; i++) {
+        var h = percentHistory[i];
+        if (h.login === login && h.date_from > monthStart && h.date_from <= monthEnd) {
+            if (percents.indexOf(h.percent) === -1) percents.push(h.percent);
+        }
+    }
+    return percents; // [percent1, percent2] или [percent1]
+}
+
+/* ============================================================
+   РАСЧЁТ СКОРРЕКТИРОВАННОГО ПРОЦЕНТА
+   ============================================================ */
+function getCorrectedPercent(empLogin, date, scheduleData, empMap) {
+    var workers = scheduleData.filter(function(s) {
+        return s.date === date && (s.isWork === true || s.isWork === 1 || s.isWork === '1');
+    });
+    if (workers.length === 0) return 0;
+
+    var empInfo = empMap.get(empLogin);
+    if (!empInfo) return 0;
+
+    // Берём категорию на дату
+    var category = getCategoryForDate(empLogin, date);
+
+    // Проверяем percentOverride в расписании для этого конкретного дня
+    var empPercent = 0;
+    var schedOverride = 0;
+    for (var si = 0; si < scheduleData.length; si++) {
+        var sd = scheduleData[si];
+        if (sd.date === date && sd.empLogin === empLogin && sd.percentOverride) {
+            schedOverride = sd.percentOverride; break;
+        }
+    }
+    empPercent = schedOverride > 0 ? schedOverride : getPercentForDate(empLogin, date, empMap);
+
+    if (fixedNonParticipating.indexOf(category) !== -1) return empPercent;
+    if (fixedParticipating.indexOf(category) !== -1) return empPercent;
+
+    if (poolCategories.indexOf(category) !== -1) {
+        var sumCategories = poolCategories.concat(fixedParticipating, ['Подмога']);
+        var includedWorkers = workers.filter(function(w) {
+            var wCat = getCategoryForDate(w.empLogin, date);
+            return sumCategories.indexOf(wCat) !== -1;
+        });
+        var sumBase = 0;
+        for (var i = 0; i < includedWorkers.length; i++) {
+            var wLogin = includedWorkers[i].empLogin;
+            // Для двойных сотрудников используем override если он выставлен на этот день
+            var wOverride = 0;
+            for (var si2 = 0; si2 < scheduleData.length; si2++) {
+                var sd2 = scheduleData[si2];
+                if (sd2.date === date && sd2.empLogin === wLogin && sd2.percentOverride) {
+                    wOverride = sd2.percentOverride; break;
+                }
+            }
+            sumBase += wOverride > 0 ? wOverride : getPercentForDate(wLogin, date, empMap);
+        }
+        var poolWorkers = workers.filter(function(w) {
+            var wCat = getCategoryForDate(w.empLogin, date);
+            return poolCategories.indexOf(wCat) !== -1;
+        });
+        var poolCount = poolWorkers.length;
+        if (poolCount === 0) return 0;
+        var remaining = 17 - sumBase;
+        var extra = remaining / poolCount;
+        return empPercent + extra;
+    }
+    return 0;
+}
+
+/* ============================================================
+   АВТОРИЗАЦИЯ
+   ============================================================ */
+function doLogin() {
+    var login = document.getElementById('loginInput').value.trim();
+    var pass = document.getElementById('passInput').value;
+
+    if (!login || !pass) {
+        document.getElementById('loginError').innerText = 'Введите логин и пароль';
+        return;
+    }
+
+    document.getElementById('loginError').innerText = '';
+    debugLog('Попытка входа: ' + login);
+    showStatus('Входим...');
+
+    var url = SCRIPT_URL +
+        '?action=auth' +
+        '&login=' + encodeURIComponent(login) +
+        '&pass=' + encodeURIComponent(pass);
+
+    debugLog('URL запроса: ' + url.substring(0, 80) + '...');
+
+    fetch(url, { redirect: 'follow' })
+        .then(function(resp) {
+            debugLog('Статус ответа: ' + resp.status + ' ' + resp.statusText);
+            debugLog('Content-Type: ' + resp.headers.get('content-type'));
+            return resp.text();
+        })
+        .then(function(text) {
+            debugLog('Тело ответа: ' + text.substring(0, 300));
+
+            var data;
+            try {
+                data = JSON.parse(text);
+            } catch(e) {
+                debugLog('ОШИБКА: ответ не JSON! Возможно скрипт не развёрнут.');
+                document.getElementById('loginError').innerText =
+                    'Сервер вернул не JSON. Проверьте URL скрипта и деплой.';
+                showStatus('Ошибка: не JSON ответ', true);
+                return;
+            }
+
+            debugLog('Ответ: ' + JSON.stringify(data));
+
+            if (data.success) {
+                currentUser = {
+                    login: login,
+                    role: data.role,
+                    fullname: data.fullname,
+                    percent: data.percent,
+                    category: data.category || '',
+                    tech_percent: data.tech_percent || 0,
+                    birthdate: data.birthdate || ''
+                };
+                document.getElementById('loginDiv').classList.add('hidden');
+                document.getElementById('appDiv').classList.remove('hidden');
+                document.getElementById('tabsBar').style.display = data.role === 'admin' ? 'flex' : 'none';
+                document.getElementById('dualRoleBtn').style.display = data.role === 'admin' ? '' : 'none';
+                document.getElementById('welcomeMsg').innerHTML = 'Привет, ' + data.fullname + '! 👋';
+                debugLog('Вход успешен, роль: ' + data.role);
+                refreshData();
+            } else {
+                document.getElementById('loginError').innerText = data.error || 'Ошибка входа';
+                debugLog('Вход не удался: ' + (data.error || 'неизвестная ошибка'));
+                showStatus('Ошибка входа', true);
+            }
+        })
+        .catch(function(e) {
+            debugLog('ОШИБКА СЕТИ: ' + e.message);
+            document.getElementById('loginError').innerText =
+                'Ошибка соединения: ' + e.message;
+            showStatus('Ошибка соединения', true);
+        });
+}
+
+function logout() {
+    currentUser = null;
+    currentScheduleData = [];
+    currentFinanceData = [];
+    employeesMap.clear();
+    document.getElementById('appDiv').classList.add('hidden');
+    document.getElementById('loginDiv').classList.remove('hidden');
+    document.getElementById('loginInput').value = '';
+    document.getElementById('passInput').value = '';
+    document.getElementById('loginError').innerText = '';
+    document.getElementById('mainTableContainer').innerHTML = '';
+    document.getElementById('managerTableContainer').innerHTML = '';
+    document.getElementById('earningsDiv').innerHTML = '';
+}
+
+/* ============================================================
+   ЗАГРУЗКА ДАННЫХ
+   ============================================================ */
+function refreshData() {
+    if (!currentUser) return;
+    showStatus('Загрузка из облака...');
+    debugLog('Загрузка данных...');
+
+    Promise.all([
+        fetch(SCRIPT_URL + '?action=getSchedule', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getFinance', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getEmployees', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getPercentHistory', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getCategoryHistory', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getDualRoles', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getDailyMetrics', { redirect: 'follow' }).then(function(r) { return r.json(); }),
+        fetch(SCRIPT_URL + '?action=getMonthlyMetrics', { redirect: 'follow' }).then(function(r) { return r.json(); })
+    ])
+    .then(function(results) {
+        var scheduleData = results[0];
+        var financeData = results[1];
+        var employeesData = results[2];
+        var percentHistoryData = results[3];
+        var categoryHistoryData = results[4];
+        var dualRolesData = results[5];
+        var dailyMetricsData = results[6];
+        var monthlyMetricsData = results[7];
+
+        debugLog('Загружено: график=' + scheduleData.length +
+            ', финансы=' + financeData.length +
+            ', сотрудники=' + employeesData.length);
+
+        currentScheduleData = [];
+        for (var i = 0; i < scheduleData.length; i++) {
+            var s = scheduleData[i];
+            var d = toYMD(s.date);
+            if (d !== '') {
+                currentScheduleData.push({ date: d, empLogin: s.empLogin, isWork: s.isWork, percentOverride: s.percentOverride || 0, shiftComment: s.shiftComment || '' });
+            }
+        }
+
+        currentFinanceData = [];
+        for (var i = 0; i < financeData.length; i++) {
+            var f = financeData[i];
+            var d = toYMD(f.date);
+            if (d !== '') {
+                currentFinanceData.push({ date: d, plan: f.plan || 0, fact: f.fact || 0 });
+            }
+        }
+
+        employeesMap.clear();
+        for (var i = 0; i < employeesData.length; i++) {
+            var emp = employeesData[i];
+            employeesMap.set(emp.login, {
+                category: emp.category,
+                percent: emp.percent,
+                role: emp.role,
+                fullname: emp.fullname,
+                tech_percent: emp.tech_percent || 0
+            });
+        }
+
+        percentHistory = percentHistoryData || [];
+        categoryHistory = Array.isArray(categoryHistoryData) ? categoryHistoryData : [];
+        dualRoles = Array.isArray(dualRolesData) ? dualRolesData : [];
+        dailyMetrics = Array.isArray(dailyMetricsData) ? dailyMetricsData : [];
+        monthlyMetrics = Array.isArray(monthlyMetricsData) ? monthlyMetricsData : [];
+
+        renderAll();
+        showStatus('Данные обновлены');
+    })
+    .catch(function(e) {
+        debugLog('ОШИБКА загрузки: ' + e.message);
+        showStatus('Ошибка загрузки', true);
+    });
+}
+
+/* ============================================================
+   РЕНДЕР: общая сборка
+   ============================================================ */
+function renderAll() {
+    var month = getSelectedMonth();
+    var year = getSelectedYear();
+    var prefix = year + '-' + String(month).padStart(2, '0');
+
+    var filteredSchedule = currentScheduleData.filter(function(s) {
+        return s.date.startsWith(prefix);
+    });
+
+    var financeMap = {};
+    for (var i = 0; i < currentFinanceData.length; i++) {
+        var f = currentFinanceData[i];
+        if (f.date.startsWith(prefix)) financeMap[f.date] = f;
+    }
+
+    // Группировка по категориям с учётом истории
+    var groups = new Map();
+    var firstDayOfMonth = prefix + '-01';
+    for (var entry of employeesMap.entries()) {
+        var login = entry[0];
+        var info = entry[1];
+
+        // Берём категорию на первый день выбранного месяца
+        var category = getCategoryForDate(login, firstDayOfMonth);
+
+        if (currentUser.role === 'admin') {
+            if (allCategories.indexOf(category) === -1) continue;
+        } else {
+            if (login !== currentUser.login) continue;
+        }
+
+        if (!groups.has(category)) groups.set(category, []);
+
+        var workMap = {};
+        for (var j = 0; j < filteredSchedule.length; j++) {
+            var s = filteredSchedule[j];
+            if (s.empLogin === login) {
+                workMap[s.date] = (s.isWork === true || s.isWork === 1 || s.isWork === '1');
+            }
+        }
+        groups.get(category).push({
+            login: login,
+            fullname: info.fullname,
+            workMap: workMap,
+            percent: info.percent
+        });
+    }
+
+    // Даты месяца
+    var dates = [];
+    var daysInMonth = new Date(year, month, 0).getDate();
+    for (var d = 1; d <= daysInMonth; d++) {
+        dates.push(year + '-' + String(month).padStart(2, '0') + '-' + String(d).padStart(2, '0'));
+    }
+
+    // Основная таблица — все кроме менеджеров
+    var mainCategories = poolCategories.concat(fixedParticipating, ['Подмога']);
+    var mainGroups = new Map();
+    for (var ci = 0; ci < mainCategories.length; ci++) {
+        var cat = mainCategories[ci];
+        if (groups.has(cat)) mainGroups.set(cat, groups.get(cat));
+    }
+
+    // Администрация — отдельно
+    var adminCategories = ['Управляющий', 'Менеджер', 'Ассистент', 'SMM'];
+    var adminGroups = [];
+    for (var ai = 0; ai < adminCategories.length; ai++) {
+        var aCat = adminCategories[ai];
+        var aEmps = groups.get(aCat) || [];
+        if (aEmps.length > 0) adminGroups.push({ category: aCat, employees: aEmps });
+    }
+
+    var isMobile = window.innerWidth <= 700;
+    var isEmployeeUser = currentUser.role === 'employee';
+    var noScheduleCategories = ['Управляющий', 'Ассистент', 'SMM'];
+    var isNoSchedule = isEmployeeUser && noScheduleCategories.indexOf(currentUser.category) !== -1;
+
+    if (isNoSchedule) {
+        // Категории без графика — скрываем таблицу полностью
+        document.getElementById('mainTableContainer').style.display = 'none';
+        document.getElementById('mobileScheduleContainer').style.display = 'none';
+    } else if (isMobile && isEmployeeUser) {
+        document.getElementById('mainTableContainer').style.display = 'none';
+        document.getElementById('mobileScheduleContainer').style.display = '';
+        document.getElementById('mobileScheduleContainer').innerHTML = renderMobileEmployeeSchedule(dates, financeMap);
+    } else {
+        document.getElementById('mainTableContainer').style.display = '';
+        document.getElementById('mobileScheduleContainer').style.display = 'none';
+        document.getElementById('mainTableContainer').innerHTML = renderMainTable(mainGroups, dates, financeMap);
+    }
+
+    document.getElementById('managerSection').style.display = isEmployeeUser ? 'none' : '';
+    document.getElementById('managerTableContainer').innerHTML = isEmployeeUser ? '' : renderAdminTable(adminGroups, financeMap, dates);
+
+    fixStickyHeaders();
+
+    // Блок заработка для сотрудника
+    var months = ['январь','февраль','март','апрель','май','июнь',
+                  'июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+
+    if (currentUser.role === 'employee') {
+        // Категории без графика — % от общей выручки месяца
+        var noScheduleCategories = ['Управляющий', 'Ассистент', 'SMM'];
+        var currentCategory = getCategoryForDate(currentUser.login, prefix + '-01');
+
+        if (noScheduleCategories.indexOf(currentCategory) !== -1) {
+            var totalFactMonth = 0;
+            for (var date in financeMap) { totalFactMonth += (financeMap[date].fact || 0); }
+            var lastDayOfMonth = year + '-' + String(month).padStart(2, '0') + '-' + String(new Date(year, month, 0).getDate()).padStart(2, '0');
+            var empPercent = getPercentForDate(currentUser.login, lastDayOfMonth, employeesMap);
+            var totalEarn = totalFactMonth * empPercent / 100;
+
+            document.getElementById('earningsDiv').innerHTML =
+                '<div class="earn-block">' +
+                '<div class="earn-block-title">Расчёт за ' + months[month - 1] + ' ' + year + '</div>' +
+                '<div class="earn-summary">' +
+                '<div class="earn-card accent"><div class="earn-card-label">Заработок ' + (CATEGORY_GENITIVE[currentCategory] || currentCategory) + '</div><div class="earn-card-value">' + formatNumber(totalEarn) + ' ₽</div></div>' +
+                '</div>' +
+                '</div>';
+
+        } else {
+            // Категории с графиком — % от факта каждого рабочего дня
+            var totalEarn = 0;
+            var workedDates = [];
+
+            for (var i = 0; i < filteredSchedule.length; i++) {
+                var s = filteredSchedule[i];
+                if (s.empLogin === currentUser.login && (s.isWork === true || s.isWork === 1 || s.isWork === '1')) {
+                    var fact = (financeMap[s.date] && financeMap[s.date].fact) || 0;
+                    var corrPercent = getCorrectedPercent(currentUser.login, s.date, currentScheduleData, employeesMap);
+                    totalEarn += fact * corrPercent / 100;
+                    workedDates.push(s.date);
+                }
+            }
+
+            workedDates.sort();
+
+            // Проверяем двойную должность
+            var empDualRole = getDualRole(currentUser.login);
+
+            var chipsHtml = '';
+            for (var i = 0; i < workedDates.length; i++) {
+                var d = localDate(workedDates[i]);
+                var dayNum = d.getDate();
+                var isWknd = isWeekendDate(workedDates[i]);
+
+                // Ищем комментарий к смене
+                var shiftCmt = '';
+                if (empDualRole) {
+                    for (var si = 0; si < currentScheduleData.length; si++) {
+                        var sd = currentScheduleData[si];
+                        if (sd.date === workedDates[i] && sd.empLogin === currentUser.login && sd.shiftComment) {
+                            shiftCmt = sd.shiftComment; break;
+                        }
+                    }
+                }
+
+                if (shiftCmt) {
+                    chipsHtml += '<div class="day-chip-wrap">' +
+                        '<div class="day-chip' + (isWknd ? ' weekend' : '') + '">' + dayNum + '</div>' +
+                        '<div class="day-chip-comment">' + shiftCmt + '</div>' +
+                        '</div>';
+                } else {
+                    chipsHtml += '<div class="day-chip' + (isWknd ? ' weekend' : '') + '">' + dayNum + '</div>';
+                }
+            }
+
+            document.getElementById('earningsDiv').innerHTML =
+                '<div class="earn-block">' +
+                '<div class="earn-block-title">Расчёт за ' + months[month - 1] + ' ' + year + '</div>' +
+                '<div class="days-grid">' + (chipsHtml || '<span style="color:#aaa;font-size:13px;">Нет рабочих смен</span>') + '</div>' +
+                '<div class="earn-summary">' +
+                '<div class="earn-card"><div class="earn-card-label">Отработано смен</div><div class="earn-card-value">' + workedDates.length + '</div></div>' +
+                '<div class="earn-card accent"><div class="earn-card-label">Заработок ' + (CATEGORY_GENITIVE[currentCategory] || currentCategory) + '</div><div class="earn-card-value">' + formatNumber(totalEarn) + ' ₽</div></div>' +
+                '</div>' +
+                '</div>';
+        }
+    } else {
+        document.getElementById('earningsDiv').innerHTML = '';
+    }
+
+    // Нумерология
+    renderNumerology();
+    // Показатели
+    renderMetrics();
+
+}
+
+/* ============================================================
+   ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: CSS-класс для категории
+   ============================================================ */
+function getCategoryClass(category) {
+    return CATEGORY_CLASSES[category] || '';
+}
+
+/* ============================================================
+   РЕНДЕР: основная таблица
+   ============================================================ */
+function renderMainTable(groups, dates, financeMap) {
+    var isAdmin = currentUser.role === 'admin';
+    var totalPlan = 0, totalFact = 0;
+
+    for (var i = 0; i < dates.length; i++) {
+        totalPlan += (financeMap[dates[i]] && financeMap[dates[i]].plan) || 0;
+        totalFact += (financeMap[dates[i]] && financeMap[dates[i]].fact) || 0;
+    }
+
+    var prefix2 = dates.length > 0 ? dates[0].substring(0,7) : '';
+    var colCount = 1 + dates.length + 1 + (isAdmin ? 1 : 0);
+    var html = '<table class="main-table">';
+
+    // ===== THEAD =====
+    html += '<thead>';
+
+    // Строка 1: номера дней
+    html += '<tr><th>Сотрудник / День</th>';
+    for (var i = 0; i < dates.length; i++) {
+        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : '';
+        html += '<th' + wkStyle + '>' + (i + 1) + '</th>';
+    }
+    html += '<th>Итого</th>';
+    if (isAdmin) html += '<th>Заработок</th>';
+    html += '</tr>';
+
+    // Строка 2: дни недели
+    html += '<tr><th style="background:#fafafa;">день недели</th>';
+    for (var i = 0; i < dates.length; i++) {
+        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : ' style="background:#fafafa;"';
+        html += '<th' + wkStyle + '>' + dayOfWeekShort(dates[i]) + '</th>';
+    }
+    html += '<th></th>';
+    if (isAdmin) html += '<th></th>';
+    html += '</tr>';
+
+    if (isAdmin) {
+        // Строка 3: План
+        html += '<tr style="background:#fff3e0;"><th><strong>План</strong></th>';
+        for (var i = 0; i < dates.length; i++) {
+            var date = dates[i];
+            var val = (financeMap[date] && financeMap[date].plan) || 0;
+            var cls = isWeekendDate(date) ? ' class="weekend"' : '';
+            html += '<td' + cls + '>' +
+                '<input type="text" class="finance-input" value="' + formatInputNumber(val) + '"' +
+                ' onblur="updateFinanceFromInput(\'' + date + '\',\'plan\',this)">' +
+                '</td>';
+        }
+        html += '<td><strong>' + formatNumber(totalPlan) + '</strong></td>';
+        html += '<td></td>';
+        html += '</tr>';
+
+        // Строка 4: Факт
+        html += '<tr style="background:#fff3e0;"><th><strong>Факт</strong></th>';
+        for (var i = 0; i < dates.length; i++) {
+            var date = dates[i];
+            var plan = (financeMap[date] && financeMap[date].plan) || 0;
+            var fact = (financeMap[date] && financeMap[date].fact) || 0;
+            var cellClass = '', percentText = '';
+            if (plan > 0) {
+                var pct = (fact / plan) * 100;
+                percentText = pct.toFixed(1) + '%';
+                cellClass = pct >= 100 ? 'fact-cell-good' : 'fact-cell-bad';
+            } else {
+                percentText = 'нет плана';
+            }
+            var wkClass = isWeekendDate(date) ? ' weekend' : '';
+            html += '<td class="' + cellClass + wkClass + '" title="Выполнение: ' + percentText + '">' +
+                '<input type="text" class="fact-input" value="' + formatInputNumber(fact) + '"' +
+                ' onblur="updateFinanceFromInput(\'' + date + '\',\'fact\',this)">' +
+                '</td>';
+        }
+        html += '<td><strong>' + formatNumber(totalFact) + '</strong></td>';
+        html += '<td></td>';
+        html += '</tr>';
+    }
+
+    html += '</thead>';
+
+    // ===== TBODY =====
+    html += '<tbody>';
+
+    var sortedCategories = Array.from(groups.keys());
+    for (var ci = 0; ci < sortedCategories.length; ci++) {
+        var category = sortedCategories[ci];
+        var employees = groups.get(category);
+        if (!employees || !employees.length) continue;
+
+        var catClass = getCategoryClass(category);
+        html += '<tr class="category-header ' + catClass + '"><td colspan="' + colCount + '" style="text-align:left;">📁 ' + category + '</td></tr>';
+
+        for (var ei = 0; ei < employees.length; ei++) {
+            var emp = employees[ei];
+            var workMap = emp.workMap;
+            var workDays = 0;
+
+            var isDual = !!getDualRole(emp.login);
+            html += '<tr' + (isDual ? ' class="dual-row"' : '') + '>';
+            var dualBadge = isDual ? '<span class="dual-badge">2×</span>' : '';
+            html += '<td style="text-align:left; font-weight:bold;">' + emp.fullname + dualBadge + '</td>';
+
+            for (var di = 0; di < dates.length; di++) {
+                var date = dates[di];
+                var isWork = workMap[date] === true;
+                if (isWork) workDays++;
+                var wkClass = isWeekendDate(date) ? ' weekend' : '';
+                var cellContent = '';
+
+                if (isWork && isAdmin) {
+                    var fact = (financeMap[date] && financeMap[date].fact) || 0;
+                    var corrPercent = getCorrectedPercent(emp.login, date, currentScheduleData, employeesMap);
+                    var dailyEarn = fact * corrPercent / 100;
+                    // Проверяем override для индикатора
+                    var ovr = 0;
+                    for (var oi2 = 0; oi2 < currentScheduleData.length; oi2++) {
+                        var osd2 = currentScheduleData[oi2];
+                        if (osd2.date === date && osd2.empLogin === emp.login) { ovr = osd2.percentOverride||0; break; }
+                    }
+                    var ovrLabel = ovr > 0 ? '<span class="transition-badge">'+ovr+'%</span>' : '';
+                    var cmtLabel = (osd2 && osd2.shiftComment) ? '<span class="shift-comment-badge">💬</span>' : '';
+                    cellContent =
+                        '<div style="display:flex;flex-direction:column;align-items:center;">' +
+                        '<span>С' + ovrLabel + cmtLabel + '</span>' +
+                        '<span class="earn-per-day">' + formatNumber(dailyEarn) + ' ₽</span>' +
+                        '</div>';
+                } else if (isWork) {
+                    cellContent = 'С';
+                }
+
+                if (isAdmin) {
+                    // Определяем percentOverride для этой ячейки
+                    var cellOverride = 0;
+                    for (var osi = 0; osi < currentScheduleData.length; osi++) {
+                        var osd = currentScheduleData[osi];
+                        if (osd.date === date && osd.empLogin === emp.login && osd.percentOverride) {
+                            cellOverride = osd.percentOverride; break;
+                        }
+                    }
+                    var cellClass = isWork ? (cellOverride > 0 ? 'work-cell-alt' : 'work-cell') : '';
+                    html += '<td class="' + cellClass + wkClass + '"' +
+                        ' data-emplogin="' + emp.login + '"' +
+                        ' data-date="' + date + '"' +
+                        ' data-prefix="' + prefix2 + '"' +
+                        ' onclick="toggleWorkday(this)">' +
+                        cellContent + '</td>';
+                } else {
+                    html += '<td class="' + (isWork ? 'work-cell' : '') + wkClass + '">' +
+                        cellContent + '</td>';
+                }
+            }
+
+            html += '<td><strong>' + workDays + '</strong></td>';
+
+            if (isAdmin) {
+                var totalEarn = 0;
+                for (var di = 0; di < dates.length; di++) {
+                    if (workMap[dates[di]] === true) {
+                        var fact = (financeMap[dates[di]] && financeMap[dates[di]].fact) || 0;
+                        var corr = getCorrectedPercent(emp.login, dates[di], currentScheduleData, employeesMap);
+                        totalEarn += fact * corr / 100;
+                    }
+                }
+                html += '<td><strong>' + formatNumber(totalEarn) + ' руб.</strong></td>';
+            }
+
+            html += '</tr>';
+        }
+    }
+
+    html += '</tbody></table>';
+    return html;
+}
+
+/* ============================================================
+   РЕНДЕР: таблица администрации
+   Менеджер с логином в scheduleManagers — с графиком по дням
+   Остальные — % от общей выручки месяца
+   ============================================================ */
+
+// Категории с графиком в Администрации (% от факта каждого дня)
+var scheduleAdminCategories = ['Менеджер'];
+
+function renderAdminTable(adminGroups, financeMap, dates) {
+    if (!adminGroups || adminGroups.length === 0) return '<p style="padding:10px;color:#999;">Нет сотрудников администрации</p>';
+
+    var isAdmin = currentUser.role === 'admin';
+
+    // Суммарный Факт за месяц
+    var totalFact = 0;
+    for (var date in financeMap) {
+        totalFact += financeMap[date].fact || 0;
+    }
+
+    var html = '';
+
+    for (var gi = 0; gi < adminGroups.length; gi++) {
+        var group = adminGroups[gi];
+        var catClass = getCategoryClass(group.category);
+        var withSchedule = scheduleAdminCategories.indexOf(group.category) !== -1;
+
+        if (withSchedule) {
+            // ---- Таблица С графиком (как у мастеров, но без пула) ----
+            var colCount = 1 + dates.length + 2; // имя + дни + итого дней + заработок
+            html += '<table class="manager-table" style="width:100%; margin-bottom:0;">';
+            html += '<thead>';
+
+            // Строка 1: номера дней
+            html += '<tr><th style="text-align:left;">' + group.category + '</th>';
+            for (var i = 0; i < dates.length; i++) {
+                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : '';
+                html += '<th' + wkStyle + '>' + (i + 1) + '</th>';
+            }
+            html += '<th>Дней</th><th>Заработок</th></tr>';
+
+            // Строка 2: дни недели
+            html += '<tr><th style="background:#fafafa;"></th>';
+            for (var i = 0; i < dates.length; i++) {
+                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : ' style="background:#fafafa;"';
+                html += '<th' + wkStyle + '>' + dayOfWeekShort(dates[i]) + '</th>';
+            }
+            html += '<th></th><th></th></tr>';
+
+            html += '</thead><tbody>';
+            html += '<tr class="category-header ' + catClass + '"><td colspan="' + colCount + '" style="text-align:left;">📁 ' + group.category + '</td></tr>';
+
+            for (var ei = 0; ei < group.employees.length; ei++) {
+                var emp = group.employees[ei];
+                var empInfo = employeesMap.get(emp.login);
+                var workDays = 0;
+                var totalEarn = 0;
+
+                var isDual = !!getDualRole(emp.login);
+            html += '<tr' + (isDual ? ' class="dual-row"' : '') + '>';
+                var dualBadge = isDual ? '<span class="dual-badge">2×</span>' : '';
+            html += '<td style="text-align:left; font-weight:bold;">' + emp.fullname + dualBadge + '</td>';
+
+                for (var di = 0; di < dates.length; di++) {
+                    var date = dates[di];
+                    var isWork = emp.workMap[date] === true;
+                    if (isWork) {
+                        workDays++;
+                        var percent = getPercentForDate(emp.login, date, employeesMap);
+                        var dayFact = (financeMap[date] && financeMap[date].fact) || 0;
+                        totalEarn += dayFact * percent / 100;
+                    }
+                    var wkClass = isWeekendDate(date) ? ' weekend' : '';
+                    var cellContent = '';
+
+                    if (isWork && isAdmin) {
+                        var dayFact2 = (financeMap[date] && financeMap[date].fact) || 0;
+                        var dayEarn = dayFact2 * getPercentForDate(emp.login, date, employeesMap) / 100;
+                        cellContent = '<div style="display:flex;flex-direction:column;align-items:center;">'
+                            + '<span>С</span>'
+                            + '<span class="earn-per-day">' + formatNumber(dayEarn) + ' ₽</span>'
+                            + '</div>';
+                    } else if (isWork) {
+                        cellContent = 'С';
+                    }
+
+                    if (isAdmin) {
+                        html += '<td class="' + (isWork ? 'work-cell' : '') + wkClass + '"'
+                            + ' data-emplogin="' + emp.login + '"'
+                            + ' data-date="' + date + '"'
+                            + ' onclick="toggleWorkday(this)">' + cellContent + '</td>';
+                    } else {
+                        html += '<td class="' + (isWork ? 'work-cell' : '') + wkClass + '">' + cellContent + '</td>';
+                    }
+                }
+
+                var lastDay2 = dates[dates.length - 1];
+                var displayPercent = getPercentForDate(emp.login, lastDay2, employeesMap);
+                html += '<td><strong>' + workDays + '</strong></td>';
+                html += '<td style="text-align:right;"><strong>' + formatNumber(totalEarn) + ' руб.</strong>'
+                      + '<br><span style="font-size:10px;color:#888;">' + displayPercent + '% / день</span></td>';
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+
+        } else {
+            // ---- Таблица БЕЗ графика (% от общей выручки) ----
+            html += '<table class="manager-table" style="min-width:auto; width:auto; margin-bottom:0;">';
+            html += '<tbody>';
+            html += '<tr class="category-header ' + catClass + '"><td colspan="2" style="text-align:left;">📁 ' + group.category + '</td></tr>';
+
+            for (var ei = 0; ei < group.employees.length; ei++) {
+                var emp = group.employees[ei];
+                var empInfo = employeesMap.get(emp.login);
+                var lastDayOfMonth3 = Object.keys(financeMap).sort().pop() || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-28');
+                var percent = getPercentForDate(emp.login, lastDayOfMonth3, employeesMap);
+                var earn = totalFact * percent / 100;
+
+                var isDual = !!getDualRole(emp.login);
+            html += '<tr' + (isDual ? ' class="dual-row"' : '') + '>';
+                var dualBadge = isDual ? '<span class="dual-badge">2×</span>' : '';
+            html += '<td style="text-align:left; font-weight:bold;">' + emp.fullname + dualBadge + '</td>';
+                html += '<td style="text-align:right;"><strong>' + formatNumber(earn) + ' руб.</strong>'
+                      + '<br><span style="font-size:10px; color:#888;">' + percent + '% от ' + formatNumber(totalFact) + ' ₽</span></td>';
+                html += '</tr>';
+            }
+            html += '</tbody></table>';
+        }
+    }
+
+    return html;
+}
+
+/* ============================================================
+   КЛИК ПО ЯЧЕЙКЕ: переключение смены
+   ============================================================ */
+function toggleWorkday(cellElement) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+
+    var empLogin = cellElement.dataset.emplogin;
+    var date = cellElement.dataset.date;
+    if (!empLogin || !date) return;
+
+    // Находим текущее состояние
+    var curEntry = null;
+    for (var i = 0; i < currentScheduleData.length; i++) {
+        if (currentScheduleData[i].date === date && currentScheduleData[i].empLogin === empLogin) {
+            curEntry = currentScheduleData[i]; break;
+        }
+    }
+
+    // Проверяем двойную должность
+    var dualRole = getDualRole(empLogin);
+    if (dualRole) {
+        // Для двойных — открываем попап
+        var empInfo = employeesMap.get(empLogin);
+        var fullname = empInfo ? empInfo.fullname : empLogin;
+        openShiftPopup(empLogin, date, fullname, dualRole, curEntry);
+        return;
+    }
+
+    // Обычный toggle для всех остальных
+    var curIsWork = curEntry && (curEntry.isWork === true || curEntry.isWork === 1);
+    var newIsWork = !curIsWork;
+
+    if (curEntry) {
+        curEntry.isWork = newIsWork; curEntry.percentOverride = 0; curEntry.shiftComment = '';
+    } else {
+        currentScheduleData.push({ date: date, empLogin: empLogin, isWork: newIsWork, percentOverride: 0, shiftComment: '' });
+    }
+
+    renderAll();
+
+    var url = SCRIPT_URL + '?action=updateSchedule&role=admin' +
+        '&date=' + encodeURIComponent(date) +
+        '&empLogin=' + encodeURIComponent(empLogin) +
+        '&isWork=' + newIsWork +
+        '&percentOverride=0&shiftComment=';
+
+    fetch(url, { redirect: 'follow' })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res.success) {
+                showStatus('Ошибка сохранения', true);
+                if (curEntry) curEntry.isWork = curIsWork;
+                renderAll();
+            } else { showStatus('✓ Сохранено'); }
+        })
+        .catch(function() {
+            showStatus('Ошибка сохранения', true);
+            if (curEntry) curEntry.isWork = curIsWork;
+            renderAll();
+        });
+}
+
+/* ============================================================
+   ИЗМЕНЕНИЕ ПЛАНА / ФАКТА
+   ============================================================ */
+function updateFinanceFromInput(date, field, inputElement) {
+    var rawValue = inputElement.value;
+    var numValue = parseInputNumber(rawValue);
+    inputElement.value = formatInputNumber(numValue);
+    updateFinance(date, field, numValue);
+}
+
+function updateFinance(date, field, value) {
+    if (!currentUser || currentUser.role !== 'admin') return;
+    var numVal = parseFloat(value) || 0;
+
+    // Обновляем локально
+    var found = false;
+    for (var i = 0; i < currentFinanceData.length; i++) {
+        if (currentFinanceData[i].date === date) {
+            currentFinanceData[i][field] = numVal;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        var newFin = { date: date, plan: 0, fact: 0 };
+        newFin[field] = numVal;
+        currentFinanceData.push(newFin);
+    }
+
+    // Перерисовываем
+    renderAll();
+
+    // Сохраняем
+    var url = SCRIPT_URL +
+        '?action=updateFinance&role=admin' +
+        '&date=' + encodeURIComponent(date) +
+        '&field=' + field +
+        '&value=' + numVal;
+
+    fetch(url, { redirect: 'follow' })
+        .then(function(resp) { return resp.json(); })
+        .then(function(result) {
+            if (result.success) {
+                showStatus('💰 Сохранено');
+            } else {
+                debugLog('Ошибка финансов: ' + JSON.stringify(result));
+                showStatus('Ошибка сохранения финансов', true);
+            }
+        })
+        .catch(function(e) {
+            debugLog('Ошибка сети: ' + e.message);
+            showStatus('Ошибка сохранения финансов', true);
+        });
+}
+
+/* ============================================================
+   РЕНДЕР: мобильный вид графика для сотрудника
+   ============================================================ */
+function renderMobileEmployeeSchedule(dates, financeMap) {
+    var weeks = [];
+    var week = [];
+    var dayNames = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+    // Заполняем пустыми ячейками до первого дня
+    var firstDay = localDate(dates[0]).getDay();
+    // Начинаем с понедельника (0=Пн)
+    var startOffset = (firstDay === 0) ? 6 : firstDay - 1;
+    for (var i = 0; i < startOffset; i++) week.push(null);
+
+    for (var i = 0; i < dates.length; i++) {
+        week.push(dates[i]);
+        if (week.length === 7) { weeks.push(week); week = []; }
+    }
+    if (week.length > 0) {
+        while (week.length < 7) week.push(null);
+        weeks.push(week);
+    }
+
+    var html = '<div style="background:white;border-radius:12px;padding:16px;margin-top:12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">';
+    html += '<div style="font-size:15px;font-weight:bold;color:#333;margin-bottom:12px;">График смен</div>';
+
+    // Заголовок дней недели
+    var dayLabels = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+    html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">';
+    for (var d = 0; d < 7; d++) {
+        var isWknd = d >= 5;
+        html += '<div style="text-align:center;font-size:10px;font-weight:bold;color:' + (isWknd ? '#e57373' : '#888') + ';">' + dayLabels[d] + '</div>';
+    }
+    html += '</div>';
+
+    // Недели
+    for (var w = 0; w < weeks.length; w++) {
+        html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">';
+        for (var d = 0; d < 7; d++) {
+            var date = weeks[w][d];
+            if (!date) {
+                html += '<div></div>';
+                continue;
+            }
+            var dayNum = localDate(date).getDate();
+            var isWknd = isWeekendDate(date);
+
+            // Проверяем рабочий ли день
+            var isWork = false;
+            for (var si = 0; si < currentScheduleData.length; si++) {
+                var s = currentScheduleData[si];
+                if (s.date === date && s.empLogin === currentUser.login &&
+                    (s.isWork === true || s.isWork === 1 || s.isWork === '1')) {
+                    isWork = true; break;
+                }
+            }
+
+            var bg, color, border;
+            if (isWork) {
+                bg = isWknd ? '#fce4ec' : '#e8f5e9';
+                color = isWknd ? '#880e4f' : '#2e7d32';
+                border = isWknd ? '2px solid #f48fb1' : '2px solid #a5d6a7';
+            } else {
+                bg = isWknd ? '#fff5f5' : '#fafafa';
+                color = isWknd ? '#e57373' : '#bbb';
+                border = '1px solid ' + (isWknd ? '#ffcdd2' : '#eee');
+            }
+
+            html += '<div style="text-align:center;padding:6px 2px;border-radius:8px;' +
+                'background:' + bg + ';color:' + color + ';border:' + border + ';' +
+                'font-size:14px;font-weight:' + (isWork ? 'bold' : '400') + ';">' +
+                dayNum + '</div>';
+        }
+        html += '</div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+/* ============================================================
+   ВКЛАДКИ
+   ============================================================ */
+var currentMetricsTab = 'daily';
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+        b.classList.toggle('active', (i === 0 && tab === 'schedule') || (i === 1 && tab === 'metrics'));
+    });
+    document.getElementById('tabSchedule').classList.toggle('active', tab === 'schedule');
+    document.getElementById('tabMetrics').classList.toggle('active', tab === 'metrics');
+    if (tab === 'metrics') {
+        switchMetricsTab(currentMetricsTab);
+        loadMetricsAdmin();
+    }
+}
+
+function switchMetricsTab(tab) {
+    currentMetricsTab = tab;
+    document.querySelectorAll('.metrics-sub-btn').forEach(function(b, i) {
+        b.classList.toggle('active', (i === 0 && tab === 'daily') || (i === 1 && tab === 'monthly'));
+    });
+    document.getElementById('metricsDateLabel').style.display = tab === 'daily' ? '' : 'none';
+    document.getElementById('metricsMonthLabel').style.display = tab === 'monthly' ? '' : 'none';
+    loadMetricsAdmin();
+}
+
+/* ============================================================
+   ПОКАЗАТЕЛИ — АДМИНКА
+   ============================================================ */
+
+// Какие поля у каких категорий
+var DAILY_FIELDS = {
+    'Мастер': [{ key: 'extra_sales', label: 'Доп. продажи, ₽' }, { key: 'cosmetics', label: 'Косметика, ₽' }]
+};
+
+var MONTHLY_FIELDS = {
+    'Мастер':        [{ key: 'complaints', label: 'Рекламации' }, { key: 'retention', label: 'Возвратность, %' }, { key: 'rebooking', label: 'Перезапись, %' }, { key: 'extra_sales_month', label: 'Доп. продажи, ₽' }, { key: 'goods', label: 'Товары, ₽' }],
+    'Администратор': [{ key: 'reviews', label: 'Отзывы' }, { key: 'services_load', label: 'Загрузка услуг, %' }, { key: 'retail_sales', label: 'Продажи ритейл, ₽' }, { key: 'low_terminal', label: 'Меньше терминал/QR, ₽' }],
+    'Менеджер': {
+        'Услуги': [
+            { key: 'serv_new', label: 'Новые' },
+            { key: 'serv_old', label: 'Старые' },
+            { key: 'serv_total', label: 'Общие' },
+            { key: 'serv_conv', label: 'Конверсия, %' }
+        ],
+        'Волосы': [
+            { key: 'hair_new', label: 'Новые' },
+            { key: 'hair_old', label: 'Старые' },
+            { key: 'hair_total', label: 'Общие' },
+            { key: 'hair_conv', label: 'Конверсия, %' }
+        ]
+    }
+};
+
+
+var CATEGORY_SHEET = {
+    'Мастер':        'monthly_masters',
+    'Администратор': 'monthly_admins',
+    'Менеджер':      'monthly_managers'
+};
+var CAT_CSS = {
+    'Мастер': 'master', 'Администратор': 'admin', 'Менеджер': 'manager'
+};
+
+function loadMetricsAdmin() {
+    var date = document.getElementById('metricsDateInput').value;
+    var month = document.getElementById('metricsMonthInput').value;
+    var container = document.getElementById('metricsAdminContent');
+
+    // Собираем сотрудников по категориям
+    var byCategory = {};
+    for (var entry of employeesMap.entries()) {
+        var login = entry[0];
+        var info = entry[1];
+        var cat = info.category;
+        if (!DAILY_FIELDS[cat] && !MONTHLY_FIELDS[cat]) continue;
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push({ login: login, fullname: info.fullname, category: cat });
+    }
+
+    var html = '';
+
+    if (currentMetricsTab === 'daily') {
+        // ---- Ежедневные ----
+        if (!date) { container.innerHTML = '<p style="color:#aaa;padding:10px;">Выберите дату</p>'; return; }
+        var dailyCats = Object.keys(DAILY_FIELDS);
+        dailyCats.forEach(function(cat) {
+            var emps = byCategory[cat] || [];
+            if (!emps.length) return;
+            var css = CAT_CSS[cat] || '';
+            html += '<div class="metrics-cat-label ' + css + '">' + cat + '</div>';
+            html += '<div class="metrics-grid">';
+            emps.forEach(function(emp) {
+                html += '<div class="metrics-row metrics-cat-' + css + '">';
+                html += '<div class="metrics-row-name">' + emp.fullname + '</div>';
+                html += '<div class="metrics-fields">';
+                DAILY_FIELDS[cat].forEach(function(f) {
+                    var val = getDailyMetricValue(emp.login, date, f.key);
+                    html += '<div class="metrics-field-wrap">';
+                    html += '<div class="metrics-field-label">' + f.label + '</div>';
+                    html += '<input class="metrics-field-input" type="number" min="0" value="' + (val !== '' ? val : '') + '" placeholder="0"'
+                          + ' data-login="' + emp.login + '" data-date="' + date + '" data-field="' + f.key + '" data-type="daily"'
+                          + ' onblur="saveMetricField(this)">';
+                    html += '</div>';
+                });
+                html += '</div>';
+                // Итоги справа
+                html += '<div class="metrics-totals">';
+                DAILY_FIELDS[cat].forEach(function(f) {
+                    var totals = getDailyMetricTotal(emp.login, date, f.key);
+                    html += '<div class="metrics-total-item">';
+                    html += '<span class="metrics-total-label">' + f.label.replace(', ₽','') + ':</span> ';
+                    html += '<span class="metrics-total-value">' + formatNumber(totals.sum) + ' ₽</span> ';
+                    html += '<span class="metrics-total-date">(на ' + totals.lastDate + ')</span>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+        });
+
+    } else {
+        // ---- Ежемесячные ----
+        if (!month) { container.innerHTML = '<p style="color:#aaa;padding:10px;">Выберите месяц</p>'; return; }
+        var monthlyCats = Object.keys(MONTHLY_FIELDS);
+        monthlyCats.forEach(function(cat) {
+            var emps = byCategory[cat] || [];
+            if (!emps.length) return;
+            var css = CAT_CSS[cat] || '';
+            html += '<div class="metrics-cat-label ' + css + '">' + cat + '</div>';
+            html += '<div class="metrics-grid">';
+
+            if (cat === 'Менеджер') {
+                var rep = emps[0];
+                var sections = MONTHLY_FIELDS[cat];
+                Object.keys(sections).forEach(function(sectionName) {
+                    var fields = sections[sectionName];
+                    html += '<div class="metrics-manager-section-label">' + sectionName + '</div>';
+                    html += '<div class="metrics-row metrics-cat-' + css + '">';
+                    html += '<div class="metrics-fields">';
+                    var sheetNameMgr = CATEGORY_SHEET[cat] || 'monthly_managers';
+                    fields.forEach(function(f) {
+                        var val = getMonthlyMetricValue(rep.login, month, f.key);
+                        html += '<div class="metrics-field-wrap">';
+                        html += '<div class="metrics-field-label">' + f.label + '</div>';
+                        html += '<input class="metrics-field-input" type="number" min="0" value="' + (val !== '' ? val : '') + '" placeholder="0"'
+                              + ' data-login="' + rep.login + '" data-month="' + month + '" data-field="' + f.key + '" data-type="monthly"'
+                              + ' data-sheet="' + sheetNameMgr + '"'
+                              + ' onblur="saveMetricField(this)">';
+                        html += '</div>';
+                    });
+                    html += '</div></div>';
+                });
+            } else {
+                // Поля которые считаются из ежедневных (только чтение)
+                var dailyDerivedFields = ['extra_sales_month', 'goods'];
+
+                emps.forEach(function(emp) {
+                    html += '<div class="metrics-row metrics-cat-' + css + '">';
+                    html += '<div class="metrics-row-name">' + emp.fullname + '</div>';
+                    html += '<div class="metrics-fields">';
+                    MONTHLY_FIELDS[cat].forEach(function(f) {
+                        html += '<div class="metrics-field-wrap">';
+                        html += '<div class="metrics-field-label">' + f.label + '</div>';
+                        if (dailyDerivedFields.indexOf(f.key) !== -1) {
+                            var dailyKey = f.key === 'extra_sales_month' ? 'extra_sales' : 'cosmetics';
+                            var totals2 = getDailyMetricTotal(emp.login, month + '-15', dailyKey);
+                            html += '<div class="metrics-field-readonly">' + formatNumber(totals2.sum) + ' ₽</div>';
+                        } else {
+                            var sheetNameCat = CATEGORY_SHEET[cat] || 'monthly_masters';
+                            var val = getMonthlyMetricValue(emp.login, month, f.key);
+                            html += '<input class="metrics-field-input" type="number" min="0" value="' + (val !== '' ? val : '') + '" placeholder="0"'
+                                  + ' data-login="' + emp.login + '" data-month="' + month + '" data-field="' + f.key + '" data-type="monthly"'
+                                  + ' data-sheet="' + sheetNameCat + '"'
+                                  + ' onblur="saveMetricField(this)">';
+                        }
+                        html += '</div>';
+                    });
+                    html += '</div></div>';
+                });
+            }
+            html += '</div>';
+        });
+    }
+
+    if (!html) html = '<p style="color:#aaa;padding:10px;">Нет сотрудников с настроенными показателями</p>';
+    container.innerHTML = html;
+}
+
+function getDailyMetricTotal(login, currentDate, field) {
+    // Берём текущий месяц из выбранной даты
+    var monthPrefix = currentDate.substring(0, 7); // 2026-05
+    var sum = 0;
+    var lastDate = null;
+
+    for (var i = 0; i < dailyMetrics.length; i++) {
+        var d = dailyMetrics[i];
+        if (d.login !== login) continue;
+        if (!d.date || !d.date.startsWith(monthPrefix)) continue;
+        var val = parseFloat(d[field]) || 0;
+        if (val > 0) {
+            sum += val;
+            if (!lastDate || d.date > lastDate) lastDate = d.date;
+        }
+    }
+
+    var displayDate = lastDate ? formatDisplayDate(lastDate) : '—';
+    return { sum: sum, lastDate: displayDate };
+}
+
+function getDailyMetricValue(login, date, field) {
+    for (var i = 0; i < dailyMetrics.length; i++) {
+        var d = dailyMetrics[i];
+        if (d.login === login && d.date === date) return d[field] || '';
+    }
+    return '';
+}
+
+function getMonthlyMetricValue(login, month, field) {
+    for (var i = 0; i < monthlyMetrics.length; i++) {
+        var m = monthlyMetrics[i];
+        if (m.login === login && m.month === month) return m[field] || '';
+    }
+    return '';
+}
+
+function formatDisplayDate(dateStr) {
+    if (!dateStr) return '';
+    var p = dateStr.split('-');
+    return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+function formatDisplayMonth(monthStr) {
+    if (!monthStr) return '';
+    var months = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+    var p = monthStr.split('-');
+    return months[parseInt(p[1],10)-1] + ' ' + p[0];
+}
+
+function saveMetricField(input) {
+    var login = input.dataset.login;
+    var field = input.dataset.field;
+    var type = input.dataset.type;
+    var value = parseFloat(input.value) || 0;
+
+    if (type === 'daily') {
+        var date = input.dataset.date;
+        // Обновляем локально
+        var found = false;
+        for (var i = 0; i < dailyMetrics.length; i++) {
+            if (dailyMetrics[i].login === login && dailyMetrics[i].date === date) {
+                dailyMetrics[i][field] = value; found = true; break;
+            }
+        }
+        if (!found) {
+            var rec = { login: login, date: date, extra_sales: 0, cosmetics: 0 };
+            rec[field] = value;
+            dailyMetrics.push(rec);
+        }
+        var url = SCRIPT_URL + '?action=saveDailyMetric&role=admin'
+            + '&date=' + encodeURIComponent(date)
+            + '&login=' + encodeURIComponent(login)
+            + '&field=' + field + '&value=' + value;
+        fetch(url, { redirect: 'follow' })
+            .then(function(r) { return r.json(); })
+            .then(function(res) { showStatus(res.success ? '✓ Сохранено' : 'Ошибка', !res.success); })
+            .catch(function() { showStatus('Ошибка сети', true); });
+
+    } else {
+        var month = input.dataset.month;
+        // Обновляем локально
+        var found = false;
+        for (var i = 0; i < monthlyMetrics.length; i++) {
+            if (monthlyMetrics[i].login === login && monthlyMetrics[i].month === month) {
+                monthlyMetrics[i][field] = value; found = true; break;
+            }
+        }
+        if (!found) {
+            var rec2 = { login: login, month: month, complaints: 0, retention: 0, rebooking: 0, reviews: 0, services_load: 0, retail_sales: 0, low_terminal: 0, leads_services: 0, conv_services: 0, leads_hair: 0, conv_hair: 0 };
+            rec2[field] = value;
+            monthlyMetrics.push(rec2);
+        }
+        var sheetName = input.dataset.sheet || 'monthly_masters';
+        var url2 = SCRIPT_URL + '?action=saveMonthlyMetric&role=admin'
+            + '&month=' + encodeURIComponent(month)
+            + '&login=' + encodeURIComponent(login)
+            + '&field=' + field + '&value=' + value
+            + '&sheetName=' + encodeURIComponent(sheetName);
+        fetch(url2, { redirect: 'follow' })
+            .then(function(r) { return r.json(); })
+            .then(function(res) { showStatus(res.success ? '✓ Сохранено' : 'Ошибка', !res.success); })
+            .catch(function() { showStatus('Ошибка сети', true); });
+    }
+}
+
+/* ============================================================
+   ПОКАЗАТЕЛИ СОТРУДНИКА
+   ============================================================ */
+function renderMetrics() {
+    var div = document.getElementById('metricsDiv');
+    if (!div) return;
+    if (!currentUser || currentUser.role !== 'employee') { div.innerHTML = ''; return; }
+
+    var month = getSelectedMonth();
+    var year = getSelectedYear();
+    var prefix = year + '-' + String(month).padStart(2, '0');
+    var monthKey = prefix;
+    var category = getCategoryForDate(currentUser.login, prefix + '-01');
+    var login = currentUser.login;
+
+    var monthNames = ['январь','февраль','март','апрель','май','июнь',
+                      'июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+    var periodLabel = monthNames[month-1] + ' ' + year;
+
+    var html = '';
+
+    // ===== МАСТЕР — личные данные =====
+    if (category === 'Мастер') {
+        // Ежедневные — только свои
+        var myDaily = dailyMetrics.filter(function(d) {
+            return d.login === login && d.date && d.date.startsWith(prefix);
+        }).sort(function(a,b) { return a.date > b.date ? 1 : -1; });
+
+        // Ежемесячные — только свои
+        var myMonthly = null;
+        for (var i = 0; i < monthlyMetrics.length; i++) {
+            var m = monthlyMetrics[i];
+            if (m._sheet === 'masters' && m.login === login && m.month === monthKey) {
+                myMonthly = m; break;
+            }
+        }
+
+        var hasData = myDaily.length > 0 || myMonthly;
+        html += '<div class="metrics-block">';
+        html += '<div class="metrics-title">📊 Ваши показатели — ' + periodLabel + '</div>';
+
+        if (!hasData) {
+            html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
+        } else {
+            // --- Продажи ---
+            if (myDaily.length > 0) {
+                var totSales = 0, totCosm = 0;
+                myDaily.forEach(function(d) { totSales += parseFloat(d.extra_sales)||0; totCosm += parseFloat(d.cosmetics)||0; });
+
+                html += '<div class="metrics-section-label">Продажи за месяц</div>';
+                html += '<div class="metrics-cards">';
+                html += mCard('accent-green', 'Доп. продажи', formatNumber(totSales) + ' ₽', '💰');
+                html += mCard('accent-purple', 'Косметика', formatNumber(totCosm) + ' ₽', '🧴');
+                html += '</div>';
+
+                if (myDaily.length > 1) {
+                    html += '<div style="font-size:11px;color:#888;margin:8px 0 4px;">Динамика по дням</div>';
+                    html += buildMetricsChart(myDaily);
+                }
+            }
+
+            // --- KPI ---
+            if (myMonthly) {
+                html += '<div class="metrics-section-label">Качество работы</div>';
+                html += '<div class="metrics-cards">';
+                var complaints = parseInt(myMonthly.complaints)||0;
+                var retention  = parseFloat(myMonthly.retention)||0;
+                var rebooking  = parseFloat(myMonthly.rebooking)||0;
+                html += mKpiCard('Рекламации', complaints, complaints===0?'✅':complaints===1?'⚠️':'❌',
+                    complaints===0?'green':complaints<=1?'orange':'red', '');
+                html += mKpiCard('Возвратность', retention, retention>=70?'✅':retention>=50?'⚠️':'❌',
+                    retention>=70?'green':retention>=50?'orange':'red', '%');
+                html += mKpiCard('Перезапись', rebooking, rebooking>=70?'✅':rebooking>=50?'⚠️':'❌',
+                    rebooking>=70?'green':rebooking>=50?'orange':'red', '%');
+                html += '</div>';
+            }
+        }
+        html += '</div>';
+
+    // ===== АДМИНИСТРАТОР — личные данные =====
+    } else if (category === 'Администратор') {
+        var myMonthly = null;
+        for (var i = 0; i < monthlyMetrics.length; i++) {
+            var m = monthlyMetrics[i];
+            if (m._sheet === 'admins' && m.login === login && m.month === monthKey) {
+                myMonthly = m; break;
+            }
+        }
+
+        html += '<div class="metrics-block">';
+        html += '<div class="metrics-title">📊 Ваши показатели — ' + periodLabel + '</div>';
+
+        if (!myMonthly) {
+            html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
+        } else {
+            html += '<div class="metrics-section-label">За месяц</div>';
+            html += '<div class="metrics-cards">';
+            var reviews  = parseInt(myMonthly.reviews)||0;
+            var servLoad = parseFloat(myMonthly.services_load)||0;
+            var retail   = parseFloat(myMonthly.retail_sales)||0;
+            var terminal = parseFloat(myMonthly.low_terminal)||0;
+            html += mKpiCard('Отзывы', reviews, reviews>=10?'✅':reviews>=5?'⚠️':'❌',
+                reviews>=10?'green':reviews>=5?'orange':'red', '');
+            html += mKpiCard('Загрузка услуг', servLoad, servLoad>=80?'✅':servLoad>=60?'⚠️':'❌',
+                servLoad>=80?'green':servLoad>=60?'orange':'red', '%');
+            html += mCard('accent-green', 'Продажи ритейл', formatNumber(retail) + ' ₽', '🛍');
+            html += mCard('accent-blue', 'Меньше терминал/QR', formatNumber(terminal) + ' ₽', '💳');
+            html += '</div>';
+        }
+        html += '</div>';
+
+    // ===== МЕНЕДЖЕР — общие по отделу =====
+    } else if (category === 'Менеджер') {
+        // Берём любую запись менеджеров за этот месяц
+        var myMonthly = null;
+        for (var i = 0; i < monthlyMetrics.length; i++) {
+            var m = monthlyMetrics[i];
+            if (m._sheet === 'managers' && m.month === monthKey) {
+                myMonthly = m; break;
+            }
+        }
+
+        html += '<div class="metrics-block">';
+        html += '<div class="metrics-title">📊 Показатели отдела — ' + periodLabel + '</div>';
+
+        if (!myMonthly) {
+            html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
+        } else {
+            var sections = [
+                { name: 'Услуги', new: parseFloat(myMonthly.serv_new)||0, old: parseFloat(myMonthly.serv_old)||0,
+                  total: parseFloat(myMonthly.serv_total)||0, conv: parseFloat(myMonthly.serv_conv)||0 },
+                { name: 'Волосы', new: parseFloat(myMonthly.hair_new)||0, old: parseFloat(myMonthly.hair_old)||0,
+                  total: parseFloat(myMonthly.hair_total)||0, conv: parseFloat(myMonthly.hair_conv)||0 }
+            ];
+
+            sections.forEach(function(s) {
+                html += '<div class="metrics-section-label">' + s.name + '</div>';
+                html += '<div class="metrics-cards">';
+                html += mCard('accent-blue',   'Новые',     s.new, '🆕');
+                html += mCard('',              'Старые',    s.old, '🔄');
+                html += mCard('accent-green',  'Общие',     s.total, '📋');
+                html += mKpiCard('Конверсия', s.conv,
+                    s.conv>=30?'✅':s.conv>=15?'⚠️':'❌',
+                    s.conv>=30?'green':s.conv>=15?'orange':'red', '%');
+                html += '</div>';
+            });
+
+            html += buildManagerChart(sections);
+        }
+        html += '</div>';
+
+    } else {
+        div.innerHTML = ''; return;
+    }
+
+    div.innerHTML = html;
+}
+
+/* Карточка с акцентным цветом */
+function mCard(accent, label, value, icon) {
+    var bg = '';
+    if (accent === 'accent-green')  bg = 'background:#e8f5e9;';
+    if (accent === 'accent-purple') bg = 'background:#f3e5f5;';
+    if (accent === 'accent-blue')   bg = 'background:#e3f2fd;';
+    return '<div class="metrics-card" style="' + bg + '">' +
+        '<div class="metrics-card-label">' + (icon ? icon + ' ' : '') + label + '</div>' +
+        '<div class="metrics-card-value">' + value + '</div>' +
+        '</div>';
+}
+
+/* KPI-карточка с иконкой статуса и цветом значения */
+function mKpiCard(label, value, icon, color, suffix) {
+    var valColor = color==='green'?'#2e7d32':color==='orange'?'#e65100':'#c62828';
+    var bg = color==='green'?'background:#e8f5e9;':color==='orange'?'background:#fff3e0;':'background:#ffebee;';
+    return '<div class="metrics-card" style="' + bg + '">' +
+        '<div class="metrics-card-label">' + label + '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+        '<span class="metrics-card-value" style="color:' + valColor + ';">' + value + suffix + '</span>' +
+        '<span style="font-size:16px;">' + icon + '</span>' +
+        '</div></div>';
+}
+
+function metricsCard(colorClass, label, value) {
+    return '<div class="metrics-card ' + colorClass + '">' +
+        '<div class="metrics-card-label">' + label + '</div>' +
+        '<div class="metrics-card-value">' + value + '</div>' +
+        '</div>';
+}
+
+function buildManagerChart(sections) {
+    if (!sections || sections.length === 0) return '';
+    var hasData = sections.some(function(s) { return s.new||s.old||s.total; });
+    if (!hasData) return '';
+
+    var W = 300, H = 150, padL = 12, padR = 12, padT = 24, padB = 36;
+    var chartH = H - padT - padB;
+    var maxVal = 0;
+    sections.forEach(function(s) { maxVal = Math.max(maxVal, s.new, s.old, s.total); });
+    if (maxVal === 0) return '';
+
+    var barW = 20, gap = 5, groupGap = 28;
+    var colors = ['#42a5f5','#66bb6a','#ab47bc'];
+    var keys = ['new','old','total'];
+    var keyLabels = ['Новые','Старые','Общие'];
+
+    var bars = '', xLabels = '';
+    sections.forEach(function(s, gi) {
+        var groupX = padL + gi * (3*barW + 2*gap + groupGap);
+        keys.forEach(function(k, bi) {
+            var val = s[k];
+            var barH = (val / maxVal) * chartH;
+            var x = groupX + bi * (barW + gap);
+            var y = padT + chartH - barH;
+            bars += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+barH+'" fill="'+colors[bi]+'" rx="3"/>';
+            if (val > 0) bars += '<text x="'+(x+barW/2)+'" y="'+(y-3)+'" text-anchor="middle" font-size="9" fill="#555">'+val+'</text>';
+        });
+        var cx = groupX + (3*barW + 2*gap) / 2;
+        xLabels += '<text x="'+cx+'" y="'+(H-20)+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">'+s.name+'</text>';
+        xLabels += '<text x="'+cx+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" fill="#7b1fa2">'+s.conv+'% конв.</text>';
+    });
+
+    var legend = keyLabels.map(function(l, i) {
+        return '<rect x="'+(padL+i*75)+'" y="5" width="9" height="9" fill="'+colors[i]+'" rx="2"/>' +
+               '<text x="'+(padL+i*75+12)+'" y="13" font-size="9" fill="#555">'+l+'</text>';
+    }).join('');
+
+    return '<div class="chart-wrap" style="margin-top:14px;">' +
+        '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">' +
+        legend + bars + xLabels + '</svg></div>';
+}
+
+function buildMetricsChart(data) {
+    // Фильтруем — только дни где есть хоть какое-то значение
+    var days = data.filter(function(d) {
+        return (parseFloat(d.extra_sales)||0) > 0 || (parseFloat(d.cosmetics)||0) > 0;
+    });
+    if (days.length === 0) return '';
+
+    var barW = 12, gap = 4, groupGap = 10;
+    var groupW = 2 * barW + gap;
+    var padL = 10, padR = 16, padT = 28, padB = 22;
+    var W = Math.max(260, padL + padR + days.length * (groupW + groupGap));
+    var H = 140;
+    var chartH = H - padT - padB;
+
+    var maxVal = 0;
+    days.forEach(function(d) {
+        maxVal = Math.max(maxVal, parseFloat(d.extra_sales)||0, parseFloat(d.cosmetics)||0);
+    });
+    if (maxVal === 0) return '';
+
+    var bars = '', labels = '', tooltips = '';
+
+    days.forEach(function(d, i) {
+        var sales = parseFloat(d.extra_sales) || 0;
+        var cosm  = parseFloat(d.cosmetics)   || 0;
+        var dayNum = parseInt(d.date.split('-')[2], 10);
+        var gx = padL + i * (groupW + groupGap);
+        var cx = gx + groupW / 2;
+
+        // Столбик продаж
+        var salesH = (sales / maxVal) * chartH;
+        var salesY = padT + chartH - salesH;
+        bars += '<rect x="'+gx+'" y="'+salesY+'" width="'+barW+'" height="'+salesH+'" fill="#43a047" rx="3" opacity="0.85"/>';
+        if (sales > 0) bars += '<text x="'+(gx+barW/2)+'" y="'+(salesY-3)+'" text-anchor="middle" font-size="8" fill="#2e7d32">'+formatNumber(sales)+'</text>';
+
+        // Столбик косметики
+        var cosmH = (cosm / maxVal) * chartH;
+        var cosmY = padT + chartH - cosmH;
+        bars += '<rect x="'+(gx+barW+gap)+'" y="'+cosmY+'" width="'+barW+'" height="'+cosmH+'" fill="#ab47bc" rx="3" opacity="0.85"/>';
+        if (cosm > 0) bars += '<text x="'+(gx+barW+gap+barW/2)+'" y="'+(cosmY-3)+'" text-anchor="middle" font-size="8" fill="#6a1b9a">'+formatNumber(cosm)+'</text>';
+
+        // Подпись дня
+        labels += '<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#555">'+dayNum+'</text>';
+    });
+
+    // Легенда
+    var legend =
+        '<rect x="'+padL+'" y="6" width="9" height="9" fill="#43a047" rx="2"/>' +
+        '<text x="'+(padL+12)+'" y="14" font-size="9" fill="#555">Доп. продажи</text>' +
+        '<rect x="'+(padL+90)+'" y="6" width="9" height="9" fill="#ab47bc" rx="2"/>' +
+        '<text x="'+(padL+102)+'" y="14" font-size="9" fill="#555">Косметика</text>';
+
+    // Горизонтальная линия основания
+    var baseline = '<line x1="'+padL+'" y1="'+(padT+chartH)+'" x2="'+(W-padR)+'" y2="'+(padT+chartH)+'" stroke="#eee" stroke-width="1"/>';
+
+    return '<div class="chart-wrap" style="margin-top:10px;">' +
+        '<svg class="chart-svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">' +
+        baseline + bars + labels + legend +
+        '</svg></div>';
+}
+
+/* ============================================================
+   НУМЕРОЛОГИЯ
+   ============================================================ */
+
+function calcNumerologyNumber(birthdate) {
+    // Личное число дня = цифровой корень (дата рождения + сегодняшняя дата)
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth() + 1;
+    var yyyy = today.getFullYear();
+
+    // Парсим дату рождения (форматы: ДД.ММ.ГГГГ или Date-строка)
+    var bday = 0, bmonth = 0;
+    if (birthdate) {
+        var parts = birthdate.replace(/\//g, '.').split('.');
+        if (parts.length >= 2) {
+            bday = parseInt(parts[0], 10) || 0;
+            bmonth = parseInt(parts[1], 10) || 0;
+        }
+    }
+
+    // Складываем все цифры: день рождения + месяц рождения + день + месяц + год
+    var sum = 0;
+    function addDigits(n) {
+        String(n).split('').forEach(function(c) { sum += parseInt(c, 10) || 0; });
+    }
+    addDigits(bday);
+    addDigits(bmonth);
+    addDigits(dd);
+    addDigits(mm);
+    addDigits(yyyy);
+
+    // Сводим к числу от 1 до 9
+    while (sum > 9) {
+        var s = 0;
+        String(sum).split('').forEach(function(c) { s += parseInt(c, 10) || 0; });
+        sum = s;
+    }
+    return sum || 1;
+}
+
+function renderNumerology() {
+    var div = document.getElementById('numerologyDiv');
+    if (!div) return;
+
+    // Только для сотрудников с датой рождения
+    if (!currentUser || currentUser.role !== 'employee' || !currentUser.birthdate) {
+        div.innerHTML = '';
+        return;
+    }
+
+    var num = calcNumerologyNumber(currentUser.birthdate);
+    var today = new Date();
+    var dateKey = 'numerology_' + currentUser.login + '_' + today.toISOString().split('T')[0];
+
+    // Проверяем кеш (sessionStorage) — не генерировать повторно в рамках сессии
+    var cached = null;
+    try { cached = sessionStorage.getItem(dateKey); } catch(e) {}
+
+    if (cached) {
+        showNumerologyBlock(div, num, cached);
+        return;
+    }
+
+    // Показываем загрузку
+    div.innerHTML = '<div class="numerology-block"><div class="numerology-title">Твой день по нумерологии</div><div class="numerology-loading">Считаем твои числа... ✨</div></div>';
+
+    // Генерируем через Anthropic API
+    var today2 = new Date();
+    var dayNames = ['воскресенье','понедельник','вторник','среду','четверг','пятницу','субботу'];
+    var monthNames = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    var todayStr = today2.getDate() + ' ' + monthNames[today2.getMonth()] + ', ' + dayNames[today2.getDay()];
+
+    fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 200,
+            messages: [{
+                role: 'user',
+                content: 'Ты нумеролог. Сегодня ' + todayStr + '. Персональное число дня сотрудника beauty-салона: ' + num + '. Напиши короткий (2-3 предложения) вдохновляющий прогноз на сегодня, с акцентом на работу с клиентами и мастерство. Тёплый, женский стиль. Только текст прогноза, без заголовков и вступлений.'
+            }]
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var text = (data.content && data.content[0] && data.content[0].text) || 'Сегодня особенный день — доверяй своей интуиции и всё получится! ✨';
+        try { sessionStorage.setItem(dateKey, text); } catch(e) {}
+        showNumerologyBlock(div, num, text);
+    })
+    .catch(function() {
+        var fallback = 'Сегодня твоё число ' + num + ' — это день силы и вдохновения. Дари клиентам красоту и хорошее настроение! ✨';
+        showNumerologyBlock(div, num, fallback);
+    });
+}
+
+function showNumerologyBlock(div, num, text) {
+    var today = new Date();
+    var monthNames = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    var todayStr = today.getDate() + ' ' + monthNames[today.getMonth()];
+    div.innerHTML =
+        '<div class="numerology-block">' +
+        '<div class="numerology-title">Твоё число на ' + todayStr + '</div>' +
+        '<div class="numerology-number">' + num + '</div>' +
+        '<div class="numerology-text">' + text + '</div>' +
+        '</div>';
+}
+
+/* ============================================================
+   ДИНАМИЧЕСКОЕ ИСПРАВЛЕНИЕ STICKY ЗАГОЛОВКОВ
+   ============================================================ */
+function fixStickyHeaders() {
+    requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+            var tables = [
+                { tableClass: 'main-table', container: 'mainTableContainer' },
+                { tableClass: 'manager-table', container: 'managerTableContainer' }
+            ];
+            tables.forEach(function(t) {
+                var container = document.getElementById(t.container);
+                if (!container) return;
+                var table = container.querySelector('.' + t.tableClass);
+                if (!table) return;
+                var rows = table.querySelectorAll('thead tr');
+                var offset = 0;
+                rows.forEach(function(row) {
+                    var cells = row.querySelectorAll('th, td');
+                    var rowH = row.getBoundingClientRect().height;
+                    cells.forEach(function(cell) {
+                        cell.style.position = 'sticky';
+                        cell.style.top = offset + 'px';
+                    });
+                    offset += rowH;
+                });
+            });
+        });
+    });
+}
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+window.onload = function() {
+    initMonths();
+    // Дефолтные значения для полей показателей
+    var today = new Date();
+    var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+    var monthStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+    document.getElementById('metricsDateInput').value = todayStr;
+    document.getElementById('metricsMonthInput').value = monthStr;
+    debugLog('Приложение загружено. URL скрипта: ' + SCRIPT_URL.substring(0, 60) + '...');
+};
+</script>
+</body>
+</html>
