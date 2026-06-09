@@ -1130,8 +1130,11 @@ function getCorrectedPercent(empLogin, date, scheduleData, empMap) {
             return sumCategories.indexOf(wCat) !== -1;
         });
         var sumBase = 0;
+        var seenInSum = {};
         for (var i = 0; i < includedWorkers.length; i++) {
             var wLogin = includedWorkers[i].empLogin;
+            if (seenInSum[wLogin]) continue; // защита от дублей
+            seenInSum[wLogin] = true;
             var wOverride = 0;
             for (var si2 = 0; si2 < scheduleData.length; si2++) {
                 var sd2 = scheduleData[si2];
@@ -1139,15 +1142,18 @@ function getCorrectedPercent(empLogin, date, scheduleData, empMap) {
                     wOverride = sd2.percentOverride; break;
                 }
             }
-            var wPct = wOverride > 0 ? wOverride : getPercentForDate(wLogin, date, empMap);
-            var wInfo = empMap.get(wLogin);
-            console.log('[sumBase] ' + wLogin + ' (' + (wInfo ? wInfo.category : '?') + ') = ' + wPct + '% | date=' + date);
-            sumBase += wPct;
+            sumBase += wOverride > 0 ? wOverride : getPercentForDate(wLogin, date, empMap);
         }
-        console.log('[sumBase ИТОГО] ' + sumBase + ' | date=' + date + ' | empLogin=' + empLogin);
         var poolWorkers = workers.filter(function(w) {
             var wCat = getCategoryForDate(w.empLogin, date);
             return poolCategories.indexOf(wCat) !== -1;
+        });
+        // Дедуплицируем по логину
+        var poolSeen = {};
+        poolWorkers = poolWorkers.filter(function(w) {
+            if (poolSeen[w.empLogin]) return false;
+            poolSeen[w.empLogin] = true;
+            return true;
         });
         var poolCount = poolWorkers.length;
         if (poolCount === 0) return 0;
