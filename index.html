@@ -1132,7 +1132,6 @@ function getCorrectedPercent(empLogin, date, scheduleData, empMap) {
         var sumBase = 0;
         for (var i = 0; i < includedWorkers.length; i++) {
             var wLogin = includedWorkers[i].empLogin;
-            // Для двойных сотрудников используем override если он выставлен на этот день
             var wOverride = 0;
             for (var si2 = 0; si2 < scheduleData.length; si2++) {
                 var sd2 = scheduleData[si2];
@@ -1140,8 +1139,12 @@ function getCorrectedPercent(empLogin, date, scheduleData, empMap) {
                     wOverride = sd2.percentOverride; break;
                 }
             }
-            sumBase += wOverride > 0 ? wOverride : getPercentForDate(wLogin, date, empMap);
+            var wPct = wOverride > 0 ? wOverride : getPercentForDate(wLogin, date, empMap);
+            var wInfo = empMap.get(wLogin);
+            console.log('[sumBase] ' + wLogin + ' (' + (wInfo ? wInfo.category : '?') + ') = ' + wPct + '% | date=' + date);
+            sumBase += wPct;
         }
+        console.log('[sumBase ИТОГО] ' + sumBase + ' | date=' + date + ' | empLogin=' + empLogin);
         var poolWorkers = workers.filter(function(w) {
             var wCat = getCategoryForDate(w.empLogin, date);
             return poolCategories.indexOf(wCat) !== -1;
