@@ -2068,7 +2068,7 @@ function switchMetricsTab(tab) {
 
 // Какие поля у каких категорий
 var DAILY_FIELDS = {
-    'Мастер': [{ key: 'extra_sales', label: 'Доп. продажи, ₽' }, { key: 'cosmetics', label: 'Косметика, ₽' }]
+    'Мастер': [{ key: 'extra_sales', label: 'Доп. продажи, ₽' }, { key: 'cosmetics', label: 'Косметика, ₽' }, { key: 'hair_sales', label: 'Продажа волос, ₽' }]
 };
 
 var MONTHLY_FIELDS = {
@@ -2292,7 +2292,7 @@ function saveMetricField(input) {
             }
         }
         if (!found) {
-            var rec = { login: login, date: date, extra_sales: 0, cosmetics: 0 };
+            var rec = { login: login, date: date, extra_sales: 0, cosmetics: 0, hair_sales: 0 };
             rec[field] = value;
             dailyMetrics.push(rec);
         }
@@ -2378,13 +2378,14 @@ function renderMetrics() {
         } else {
             // --- Продажи ---
             if (myDaily.length > 0) {
-                var totSales = 0, totCosm = 0;
-                myDaily.forEach(function(d) { totSales += parseFloat(d.extra_sales)||0; totCosm += parseFloat(d.cosmetics)||0; });
+                var totSales = 0, totCosm = 0, totHair = 0;
+                myDaily.forEach(function(d) { totSales += parseFloat(d.extra_sales)||0; totCosm += parseFloat(d.cosmetics)||0; totHair += parseFloat(d.hair_sales)||0; });
 
                 html += '<div class="metrics-section-label">Продажи за месяц</div>';
                 html += '<div class="metrics-cards">';
                 html += mCard('accent-green', 'Доп. продажи', formatNumber(totSales) + ' ₽', '💰');
                 html += mCard('accent-purple', 'Косметика', formatNumber(totCosm) + ' ₽', '🧴');
+                html += mCard('accent-blue', 'Продажа волос', formatNumber(totHair) + ' ₽', '💇');
                 html += '</div>';
 
                 if (myDaily.length > 1) {
@@ -2566,12 +2567,12 @@ function buildManagerChart(sections) {
 function buildMetricsChart(data) {
     // Фильтруем — только дни где есть хоть какое-то значение
     var days = data.filter(function(d) {
-        return (parseFloat(d.extra_sales)||0) > 0 || (parseFloat(d.cosmetics)||0) > 0;
+        return (parseFloat(d.extra_sales)||0) > 0 || (parseFloat(d.cosmetics)||0) > 0 || (parseFloat(d.hair_sales)||0) > 0;
     });
     if (days.length === 0) return '';
 
-    var barW = 12, gap = 4, groupGap = 10;
-    var groupW = 2 * barW + gap;
+    var barW = 10, gap = 3, groupGap = 10;
+    var groupW = 3 * barW + 2*gap;
     var padL = 10, padR = 16, padT = 28, padB = 22;
     var W = Math.max(260, padL + padR + days.length * (groupW + groupGap));
     var H = 140;
@@ -2579,7 +2580,7 @@ function buildMetricsChart(data) {
 
     var maxVal = 0;
     days.forEach(function(d) {
-        maxVal = Math.max(maxVal, parseFloat(d.extra_sales)||0, parseFloat(d.cosmetics)||0);
+        maxVal = Math.max(maxVal, parseFloat(d.extra_sales)||0, parseFloat(d.cosmetics)||0, parseFloat(d.hair_sales)||0);
     });
     if (maxVal === 0) return '';
 
@@ -2588,11 +2589,12 @@ function buildMetricsChart(data) {
     days.forEach(function(d, i) {
         var sales = parseFloat(d.extra_sales) || 0;
         var cosm  = parseFloat(d.cosmetics)   || 0;
+        var hair  = parseFloat(d.hair_sales)  || 0;
         var dayNum = parseInt(d.date.split('-')[2], 10);
         var gx = padL + i * (groupW + groupGap);
         var cx = gx + groupW / 2;
 
-        // Столбик продаж
+        // Столбик доп.продаж
         var salesH = (sales / maxVal) * chartH;
         var salesY = padT + chartH - salesH;
         bars += '<rect x="'+gx+'" y="'+salesY+'" width="'+barW+'" height="'+salesH+'" fill="#43a047" rx="3" opacity="0.85"/>';
@@ -2601,8 +2603,16 @@ function buildMetricsChart(data) {
         // Столбик косметики
         var cosmH = (cosm / maxVal) * chartH;
         var cosmY = padT + chartH - cosmH;
-        bars += '<rect x="'+(gx+barW+gap)+'" y="'+cosmY+'" width="'+barW+'" height="'+cosmH+'" fill="#ab47bc" rx="3" opacity="0.85"/>';
-        if (cosm > 0) bars += '<text x="'+(gx+barW+gap+barW/2)+'" y="'+(cosmY-3)+'" text-anchor="middle" font-size="8" fill="#6a1b9a">'+formatNumber(cosm)+'</text>';
+        var cx2 = gx+barW+gap;
+        bars += '<rect x="'+cx2+'" y="'+cosmY+'" width="'+barW+'" height="'+cosmH+'" fill="#ab47bc" rx="3" opacity="0.85"/>';
+        if (cosm > 0) bars += '<text x="'+(cx2+barW/2)+'" y="'+(cosmY-3)+'" text-anchor="middle" font-size="8" fill="#6a1b9a">'+formatNumber(cosm)+'</text>';
+
+        // Столбик продаж волос
+        var hairH = (hair / maxVal) * chartH;
+        var hairY = padT + chartH - hairH;
+        var cx3 = gx+2*(barW+gap);
+        bars += '<rect x="'+cx3+'" y="'+hairY+'" width="'+barW+'" height="'+hairH+'" fill="#42a5f5" rx="3" opacity="0.85"/>';
+        if (hair > 0) bars += '<text x="'+(cx3+barW/2)+'" y="'+(hairY-3)+'" text-anchor="middle" font-size="8" fill="#1565c0">'+formatNumber(hair)+'</text>';
 
         // Подпись дня
         labels += '<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#555">'+dayNum+'</text>';
@@ -2613,7 +2623,9 @@ function buildMetricsChart(data) {
         '<rect x="'+padL+'" y="6" width="9" height="9" fill="#43a047" rx="2"/>' +
         '<text x="'+(padL+12)+'" y="14" font-size="9" fill="#555">Доп. продажи</text>' +
         '<rect x="'+(padL+90)+'" y="6" width="9" height="9" fill="#ab47bc" rx="2"/>' +
-        '<text x="'+(padL+102)+'" y="14" font-size="9" fill="#555">Косметика</text>';
+        '<text x="'+(padL+102)+'" y="14" font-size="9" fill="#555">Косметика</text>' +
+        '<rect x="'+(padL+170)+'" y="6" width="9" height="9" fill="#42a5f5" rx="2"/>' +
+        '<text x="'+(padL+182)+'" y="14" font-size="9" fill="#555">Продажа волос</text>';
 
     // Горизонтальная линия основания
     var baseline = '<line x1="'+padL+'" y1="'+(padT+chartH)+'" x2="'+(W-padR)+'" y2="'+(padT+chartH)+'" stroke="#eee" stroke-width="1"/>';
