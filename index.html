@@ -2301,9 +2301,14 @@ function saveMetricField(input) {
             + '&login=' + encodeURIComponent(login)
             + '&field=' + field + '&value=' + value;
         fetch(url, { redirect: 'follow' })
-            .then(function(r) { return r.json(); })
-            .then(function(res) { showStatus(res.success ? '✓ Сохранено' : 'Ошибка', !res.success); })
-            .catch(function() { showStatus('Ошибка сети', true); });
+            .then(function(r) { return r.text(); })
+            .then(function(text) {
+                console.log('[saveDailyMetric] field=' + field + ' value=' + value + ' response=' + text);
+                var res;
+                try { res = JSON.parse(text); } catch(e) { res = { error: 'not json: ' + text }; }
+                showStatus(res.success ? '✓ Сохранено' : ('Ошибка: ' + (res.error||'')), !res.success);
+            })
+            .catch(function(e) { console.log('[saveDailyMetric] fetch error: ' + e.message); showStatus('Ошибка сети', true); });
 
     } else {
         var month = input.dataset.month;
