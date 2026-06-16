@@ -2192,7 +2192,7 @@ function loadMetricsAdmin() {
                 });
             } else {
                 // Поля которые считаются из ежедневных (только чтение)
-                var dailyDerivedFields = ['extra_sales_month', 'goods'];
+                var dailyDerivedFields = ['extra_sales_month', 'goods', 'hair_sales_month'];
 
                 emps.forEach(function(emp) {
                     html += '<div class="metrics-row metrics-cat-' + css + '">';
@@ -2202,7 +2202,8 @@ function loadMetricsAdmin() {
                         html += '<div class="metrics-field-wrap">';
                         html += '<div class="metrics-field-label">' + f.label + '</div>';
                         if (dailyDerivedFields.indexOf(f.key) !== -1) {
-                            var dailyKey = f.key === 'extra_sales_month' ? 'extra_sales' : 'cosmetics';
+                            var dailyKeyMap = { extra_sales_month: 'extra_sales', goods: 'cosmetics', hair_sales_month: 'hair_sales' };
+                            var dailyKey = dailyKeyMap[f.key] || 'extra_sales';
                             var totals2 = getDailyMetricTotal(emp.login, month + '-15', dailyKey);
                             html += '<div class="metrics-field-readonly">' + formatNumber(totals2.sum) + ' ₽</div>';
                         } else {
@@ -2301,14 +2302,9 @@ function saveMetricField(input) {
             + '&login=' + encodeURIComponent(login)
             + '&field=' + field + '&value=' + value;
         fetch(url, { redirect: 'follow' })
-            .then(function(r) { return r.text(); })
-            .then(function(text) {
-                console.log('[saveDailyMetric] field=' + field + ' value=' + value + ' response=' + text);
-                var res;
-                try { res = JSON.parse(text); } catch(e) { res = { error: 'not json: ' + text }; }
-                showStatus(res.success ? '✓ Сохранено' : ('Ошибка: ' + (res.error||'')), !res.success);
-            })
-            .catch(function(e) { console.log('[saveDailyMetric] fetch error: ' + e.message); showStatus('Ошибка сети', true); });
+            .then(function(r) { return r.json(); })
+            .then(function(res) { showStatus(res.success ? '✓ Сохранено' : 'Ошибка', !res.success); })
+            .catch(function() { showStatus('Ошибка сети', true); });
 
     } else {
         var month = input.dataset.month;
