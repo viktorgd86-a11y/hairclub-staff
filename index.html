@@ -2347,6 +2347,7 @@ function renderMetrics() {
     var monthKey = prefix;
     var category = getCategoryForDate(currentUser.login, prefix + '-01');
     var login = currentUser.login;
+    var isDual = !!getDualRole(login);
 
     var monthNames = ['январь','февраль','март','апрель','май','июнь',
                       'июль','август','сентябрь','октябрь','ноябрь','декабрь'];
@@ -2354,141 +2355,108 @@ function renderMetrics() {
 
     var html = '';
 
-    // ===== МАСТЕР — личные данные =====
-    if (category === 'Мастер') {
-        // Ежедневные — только свои
-        var myDaily = dailyMetrics.filter(function(d) {
-            return d.login === login && d.date && d.date.startsWith(prefix);
-        }).sort(function(a,b) { return a.date > b.date ? 1 : -1; });
+    // Собираем данные из всех возможных источников
+    var myDaily = dailyMetrics.filter(function(d) {
+        return d.login === login && d.date && d.date.startsWith(prefix);
+    }).sort(function(a,b) { return a.date > b.date ? 1 : -1; });
 
-        // Ежемесячные — только свои
-        var myMonthly = null;
-        for (var i = 0; i < monthlyMetrics.length; i++) {
-            var m = monthlyMetrics[i];
-            if (m._sheet === 'masters' && m.login === login && m.month === monthKey) {
-                myMonthly = m; break;
-            }
+    var myMasterMonthly = null, myAdminMonthly = null, myManagerMonthly = null;
+    for (var i = 0; i < monthlyMetrics.length; i++) {
+        var m = monthlyMetrics[i];
+        if (m.login === login && m.month === monthKey) {
+            if (m._sheet === 'masters')  myMasterMonthly  = m;
+            if (m._sheet === 'admins')   myAdminMonthly   = m;
         }
-
-        var hasData = myDaily.length > 0 || myMonthly;
-        html += '<div class="metrics-block">';
-        html += '<div class="metrics-title">📊 Ваши показатели — ' + periodLabel + '</div>';
-
-        if (!hasData) {
-            html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
-        } else {
-            // --- Продажи ---
-            if (myDaily.length > 0) {
-                var totSales = 0, totCosm = 0, totHair = 0;
-                myDaily.forEach(function(d) { totSales += parseFloat(d.extra_sales)||0; totCosm += parseFloat(d.cosmetics)||0; totHair += parseFloat(d.hair_sales)||0; });
-
-                html += '<div class="metrics-section-label">Продажи за месяц</div>';
-                html += '<div class="metrics-cards">';
-                html += mCard('accent-green', 'Доп. продажи', formatNumber(totSales) + ' ₽', '💰');
-                html += mCard('accent-purple', 'Косметика', formatNumber(totCosm) + ' ₽', '🧴');
-                html += mCard('accent-blue', 'Продажа волос', formatNumber(totHair) + ' ₽', '💇');
-                html += '</div>';
-
-                if (myDaily.length > 1) {
-                    html += '<div style="font-size:11px;color:#888;margin:8px 0 4px;">Динамика по дням</div>';
-                    html += buildMetricsChart(myDaily);
-                }
-            }
-
-            // --- KPI ---
-            if (myMonthly) {
-                html += '<div class="metrics-section-label">Качество работы</div>';
-                html += '<div class="metrics-cards">';
-                var complaints = parseInt(myMonthly.complaints)||0;
-                var retention  = parseFloat(myMonthly.retention)||0;
-                var rebooking  = parseFloat(myMonthly.rebooking)||0;
-                html += mKpiCard('Рекламации', complaints, complaints===0?'✅':complaints===1?'⚠️':'❌',
-                    complaints===0?'green':complaints<=1?'orange':'red', '');
-                html += mKpiCard('Возвратность', retention, retention>=70?'✅':retention>=50?'⚠️':'❌',
-                    retention>=70?'green':retention>=50?'orange':'red', '%');
-                html += mKpiCard('Перезапись', rebooking, rebooking>=70?'✅':rebooking>=50?'⚠️':'❌',
-                    rebooking>=70?'green':rebooking>=50?'orange':'red', '%');
-                html += '</div>';
-            }
-        }
-        html += '</div>';
-
-    // ===== АДМИНИСТРАТОР — личные данные =====
-    } else if (category === 'Администратор') {
-        var myMonthly = null;
-        for (var i = 0; i < monthlyMetrics.length; i++) {
-            var m = monthlyMetrics[i];
-            if (m._sheet === 'admins' && m.login === login && m.month === monthKey) {
-                myMonthly = m; break;
-            }
-        }
-
-        html += '<div class="metrics-block">';
-        html += '<div class="metrics-title">📊 Ваши показатели — ' + periodLabel + '</div>';
-
-        if (!myMonthly) {
-            html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
-        } else {
-            html += '<div class="metrics-section-label">За месяц</div>';
-            html += '<div class="metrics-cards">';
-            var reviews  = parseInt(myMonthly.reviews)||0;
-            var servLoad = parseFloat(myMonthly.services_load)||0;
-            var retail   = parseFloat(myMonthly.retail_sales)||0;
-            var terminal = parseFloat(myMonthly.low_terminal)||0;
-            html += mKpiCard('Отзывы', reviews, reviews>=10?'✅':reviews>=5?'⚠️':'❌',
-                reviews>=10?'green':reviews>=5?'orange':'red', '');
-            html += mKpiCard('Загрузка услуг', servLoad, servLoad>=80?'✅':servLoad>=60?'⚠️':'❌',
-                servLoad>=80?'green':servLoad>=60?'orange':'red', '%');
-            html += mCard('accent-green', 'Продажи ритейл', formatNumber(retail) + ' ₽', '🛍');
-            html += mCard('accent-blue', 'Меньше терминал/QR', formatNumber(terminal) + ' ₽', '💳');
-            html += '</div>';
-        }
-        html += '</div>';
-
-    // ===== МЕНЕДЖЕР — общие по отделу =====
-    } else if (category === 'Менеджер') {
-        // Берём любую запись менеджеров за этот месяц
-        var myMonthly = null;
-        for (var i = 0; i < monthlyMetrics.length; i++) {
-            var m = monthlyMetrics[i];
-            if (m._sheet === 'managers' && m.month === monthKey) {
-                myMonthly = m; break;
-            }
-        }
-
-        html += '<div class="metrics-block">';
-        html += '<div class="metrics-title">📊 Показатели отдела — ' + periodLabel + '</div>';
-
-        if (!myMonthly) {
-            html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
-        } else {
-            var sections = [
-                { name: 'Услуги', new: parseFloat(myMonthly.serv_new)||0, old: parseFloat(myMonthly.serv_old)||0,
-                  total: parseFloat(myMonthly.serv_total)||0, conv: parseFloat(myMonthly.serv_conv)||0 },
-                { name: 'Волосы', new: parseFloat(myMonthly.hair_new)||0, old: parseFloat(myMonthly.hair_old)||0,
-                  total: parseFloat(myMonthly.hair_total)||0, conv: parseFloat(myMonthly.hair_conv)||0 }
-            ];
-
-            sections.forEach(function(s) {
-                html += '<div class="metrics-section-label">' + s.name + '</div>';
-                html += '<div class="metrics-cards">';
-                html += mCard('accent-blue',   'Новые',     s.new, '🆕');
-                html += mCard('',              'Старые',    s.old, '🔄');
-                html += mCard('accent-green',  'Общие',     s.total, '📋');
-                html += mKpiCard('Конверсия', s.conv,
-                    s.conv>=30?'✅':s.conv>=15?'⚠️':'❌',
-                    s.conv>=30?'green':s.conv>=15?'orange':'red', '%');
-                html += '</div>';
-            });
-
-            html += buildManagerChart(sections);
-        }
-        html += '</div>';
-
-    } else {
-        div.innerHTML = ''; return;
+        if (m._sheet === 'managers' && m.month === monthKey) myManagerMonthly = m;
     }
 
+    var titlePrefix = isDual ? '📊 Ваши показатели (двойная должность) — ' : '📊 Ваши показатели — ';
+    html += '<div class="metrics-block">';
+    html += '<div class="metrics-title">' + titlePrefix + periodLabel + '</div>';
+
+    var hasAnyData = false;
+
+    // ---- БЛОК ЕЖЕДНЕВНЫХ ПРОДАЖ (Мастер или двойной с мастерскими сменами) ----
+    if (myDaily.length > 0 && (category === 'Мастер' || isDual)) {
+        hasAnyData = true;
+        var totSales = 0, totCosm = 0, totHair = 0;
+        myDaily.forEach(function(d) {
+            totSales += parseFloat(d.extra_sales)||0;
+            totCosm  += parseFloat(d.cosmetics)||0;
+            totHair  += parseFloat(d.hair_sales)||0;
+        });
+        if (isDual) html += '<div class="metrics-section-label" style="color:#7b1fa2;">🎨 За мастера — продажи</div>';
+        else        html += '<div class="metrics-section-label">Продажи за месяц</div>';
+        html += '<div class="metrics-cards">';
+        html += mCard('accent-green',  'Доп. продажи',   formatNumber(totSales) + ' ₽', '💰');
+        html += mCard('accent-purple', 'Косметика',       formatNumber(totCosm)  + ' ₽', '🧴');
+        html += mCard('accent-blue',   'Продажа волос',   formatNumber(totHair)  + ' ₽', '💇');
+        html += '</div>';
+        if (myDaily.length > 1) {
+            html += '<div style="font-size:11px;color:#888;margin:8px 0 4px;">Динамика по дням</div>';
+            html += buildMetricsChart(myDaily);
+        }
+    }
+
+    // ---- БЛОК KPI МАСТЕРА ----
+    if (myMasterMonthly && (category === 'Мастер' || isDual)) {
+        hasAnyData = true;
+        if (isDual) html += '<div class="metrics-section-label" style="color:#7b1fa2;">🎨 За мастера — качество</div>';
+        else        html += '<div class="metrics-section-label">Качество работы</div>';
+        html += '<div class="metrics-cards">';
+        var complaints = parseInt(myMasterMonthly.complaints)||0;
+        var retention  = parseFloat(myMasterMonthly.retention)||0;
+        var rebooking  = parseFloat(myMasterMonthly.rebooking)||0;
+        html += mKpiCard('Рекламации',  complaints, complaints===0?'✅':complaints===1?'⚠️':'❌', complaints===0?'green':complaints<=1?'orange':'red', '');
+        html += mKpiCard('Возвратность', retention,  retention>=70?'✅':retention>=50?'⚠️':'❌',   retention>=70?'green':retention>=50?'orange':'red', '%');
+        html += mKpiCard('Перезапись',   rebooking,  rebooking>=70?'✅':rebooking>=50?'⚠️':'❌',   rebooking>=70?'green':rebooking>=50?'orange':'red', '%');
+        html += '</div>';
+    }
+
+    // ---- БЛОК KPI АДМИНИСТРАТОРА ----
+    if (myAdminMonthly && (category === 'Администратор' || isDual)) {
+        hasAnyData = true;
+        if (isDual) html += '<div class="metrics-section-label" style="color:#1976d2;">🗂 За администратора</div>';
+        else        html += '<div class="metrics-section-label">За месяц</div>';
+        html += '<div class="metrics-cards">';
+        var reviews  = parseInt(myAdminMonthly.reviews)||0;
+        var servLoad = parseFloat(myAdminMonthly.services_load)||0;
+        var retail   = parseFloat(myAdminMonthly.retail_sales)||0;
+        var terminal = parseFloat(myAdminMonthly.low_terminal)||0;
+        html += mKpiCard('Отзывы',        reviews,  reviews>=10?'✅':reviews>=5?'⚠️':'❌',    reviews>=10?'green':reviews>=5?'orange':'red', '');
+        html += mKpiCard('Загрузка услуг', servLoad, servLoad>=80?'✅':servLoad>=60?'⚠️':'❌', servLoad>=80?'green':servLoad>=60?'orange':'red', '%');
+        html += mCard('accent-green', 'Продажи ритейл',      formatNumber(retail)    + ' ₽', '🛍');
+        html += mCard('accent-blue',  'Меньше терминал/QR',  formatNumber(terminal)  + ' ₽', '💳');
+        html += '</div>';
+    }
+
+    // ---- БЛОК МЕНЕДЖЕРА ----
+    if (category === 'Менеджер' && myManagerMonthly) {
+        hasAnyData = true;
+        html += '<div class="metrics-section-label">Показатели отдела</div>';
+        var sections = [
+            { name: 'Услуги', new: parseFloat(myManagerMonthly.serv_new)||0, old: parseFloat(myManagerMonthly.serv_old)||0,
+              total: parseFloat(myManagerMonthly.serv_total)||0, conv: parseFloat(myManagerMonthly.serv_conv)||0 },
+            { name: 'Волосы', new: parseFloat(myManagerMonthly.hair_new)||0, old: parseFloat(myManagerMonthly.hair_old)||0,
+              total: parseFloat(myManagerMonthly.hair_total)||0, conv: parseFloat(myManagerMonthly.hair_conv)||0 }
+        ];
+        sections.forEach(function(s) {
+            html += '<div class="metrics-section-label">' + s.name + '</div>';
+            html += '<div class="metrics-cards">';
+            html += mCard('accent-blue',  'Новые',  s.new,   '🆕');
+            html += mCard('',             'Старые', s.old,   '🔄');
+            html += mCard('accent-green', 'Общие',  s.total, '📋');
+            html += mKpiCard('Конверсия', s.conv, s.conv>=30?'✅':s.conv>=15?'⚠️':'❌', s.conv>=30?'green':s.conv>=15?'orange':'red', '%');
+            html += '</div>';
+        });
+        html += buildManagerChart(sections);
+    }
+
+    if (!hasAnyData) {
+        html += '<div style="color:#aaa;font-size:13px;padding:8px 0;">Данные за этот месяц ещё не внесены</div>';
+    }
+
+    html += '</div>';
     div.innerHTML = html;
 }
 
