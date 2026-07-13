@@ -35,12 +35,12 @@
         }
         .manager-title {
             font-weight: bold; font-size: 14px; margin: 20px 0 5px;
-            padding: 6px 10px; background: #e0e0e0; width: 100%;
+            padding: 6px 10px; background: #dbe4ea; width: 100%;
         }
 
         table { border-collapse: collapse; width: max-content; min-width: 100%; background: white; font-size: 12px; }
         th, td { border: 1px solid #aaa; padding: 5px 8px; text-align: center; white-space: nowrap; }
-        th { background: #f0f0f0; font-weight: bold; }
+        th { background: #eaf0f4; font-weight: bold; }
 
         .main-table td:first-child,
         .main-table th:first-child,
@@ -52,32 +52,32 @@
         /* Угловые ячейки thead — top проставляется динамически через fixStickyHeaders() */
         .main-table thead th,
         .main-table thead td { position: sticky; z-index: 100; }
-        .main-table thead tr:nth-child(1) th { top: 0; background: #f0f0f0; }
-        .main-table thead tr:nth-child(2) th { background: #fafafa; }
+        .main-table thead tr:nth-child(1) th { top: 0; background: #eaf0f4; }
+        .main-table thead tr:nth-child(2) th { background: #f3f6f9; }
         .main-table thead tr:nth-child(3) th,
-        .main-table thead tr:nth-child(3) td { background: #fff3e0; }
+        .main-table thead tr:nth-child(3) td { background: #f2e6d3; }
         .main-table thead tr:nth-child(4) th,
-        .main-table thead tr:nth-child(4) td { background: #fff3e0; }
+        .main-table thead tr:nth-child(4) td { background: #f2e6d3; }
 
         .main-table thead tr th:first-child,
         .main-table thead tr td:first-child { z-index: 150; }
 
         .manager-table thead th { position: sticky; z-index: 100; }
-        .manager-table thead tr:nth-child(1) th { top: 0; background: #f0f0f0; }
-        .manager-table thead tr:nth-child(2) th { background: #fafafa; }
+        .manager-table thead tr:nth-child(1) th { top: 0; background: #eaf0f4; }
+        .manager-table thead tr:nth-child(2) th { background: #f3f6f9; }
         .manager-table thead tr:nth-child(1) th:first-child,
         .manager-table thead tr:nth-child(2) th:first-child { z-index: 150; }
 
         /* Первая ячейка строк категорий наследует цвет от cat-* */
-        .cat-master td:first-child     { background: #c8e6c9 !important; }
-        .cat-admin td:first-child      { background: #bbdefb !important; }
-        .cat-capsulator td:first-child { background: #e1bee7 !important; }
-        .cat-cleaner td:first-child    { background: #fff9c4 !important; }
-        .cat-pomoga td:first-child     { background: #f8bbd0 !important; }
-        .cat-manager td:first-child    { background: #b2dfdb !important; }
-        .cat-upravlyayuschiy td:first-child { background: #ffe0b2 !important; }
-        .cat-assistant td:first-child { background: #e8eaf6 !important; }
-        .cat-smm td:first-child       { background: #fce4ec !important; }
+        .cat-master td:first-child     { background: #d7e6ee !important; }
+        .cat-admin td:first-child      { background: #d9e8e0 !important; }
+        .cat-capsulator td:first-child { background: #e2e6ec !important; }
+        .cat-cleaner td:first-child    { background: #f0e6cf !important; }
+        .cat-pomoga td:first-child     { background: #f0dde0 !important; }
+        .cat-manager td:first-child    { background: #c7dde2 !important; }
+        .cat-upravlyayuschiy td:first-child { background: #f0ddc0 !important; }
+        .cat-assistant td:first-child { background: #e6ebf0 !important; }
+        .cat-smm td:first-child       { background: #eddde2 !important; }
 
 
 
@@ -118,11 +118,11 @@
             border-radius: 6px; font-size: 13px;
         }
         .shift-popup-btns { display: flex; gap: 8px; justify-content: flex-end; }
-        .shift-btn-confirm { background: #43a047; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .shift-btn-remove  { background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .shift-btn-cancel  { background: #e0e0e0; color: #333; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-confirm { background: #6a9e8a; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-remove  { background: #c0574a; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-cancel  { background: #dbe4ea; color: #333; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .shift-comment-badge {
-            font-size: 8px; background: #5c6bc0; color: white;
+            font-size: 8px; background: #3a5570; color: white;
             border-radius: 3px; padding: 0 3px; margin-left: 2px;
         }
         /* ======================== */
@@ -159,7 +159,7 @@
             padding: 8px 12px; border-radius: 8px; cursor: pointer;
             border: 1px solid #eee; transition: background 0.15s;
         }
-        .modal-emp-item:hover { background: #f5f5f5; }
+        .modal-emp-item:hover { background: #eef2f6; }
         .modal-emp-item.selected { background: #f7ecd9; border-color: #b8823e; }
         .modal-emp-name { font-size: 13px; font-weight: bold; flex: 1; }
         .modal-emp-cat { font-size: 11px; color: #888; }
@@ -173,14 +173,14 @@
         }
         .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
         .modal-btn-save { background: #b8823e; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .modal-btn-remove { background: #f44336; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .modal-btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .modal-btn-remove { background: #c0574a; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .modal-btn-cancel { background: #dbe4ea; color: #333; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         /* ============================== */
         /* ===== ПЕРЕХОДНЫЕ СМЕНЫ ===== */
-        .work-cell-alt { background: #fff3e0; cursor: pointer; border: 1px solid #ffb74d; }
-        .work-cell-alt:hover { background: #ffe0b2; }
+        .work-cell-alt { background: #f2e6d3; cursor: pointer; border: 1px solid #c9974f; }
+        .work-cell-alt:hover { background: #e8d5b8; }
         .transition-badge {
-            display: inline-block; font-size: 8px; background: #ff9800;
+            display: inline-block; font-size: 8px; background: #b8823e;
             color: white; border-radius: 3px; padding: 0 3px; margin-left: 2px;
         }
         /* ============================== */
@@ -214,9 +214,9 @@
         }
         .day-chip {
             width: 44px; height: 44px; border-radius: 10px;
-            background: #e8f5e9; border: 2px solid #a5d6a7;
+            background: #dbe8e2; border: 2px solid #a9c9bd;
             display: flex; align-items: center; justify-content: center;
-            font-size: 15px; font-weight: bold; color: #2e7d32;
+            font-size: 15px; font-weight: bold; color: #2f5c4c;
         }
 
         /* ===== ЧИП С КОММЕНТАРИЕМ ===== */
@@ -224,20 +224,20 @@
             display: flex; flex-direction: column; align-items: center; gap: 3px;
         }
         .day-chip-comment {
-            font-size: 9px; font-weight: bold; color: #5c6bc0;
+            font-size: 9px; font-weight: bold; color: #3a5570;
             white-space: nowrap; max-width: 54px;
             overflow: hidden; text-overflow: ellipsis;
             text-align: center;
         }
         /* ================================ */
         .day-chip.weekend {
-            background: #fce4ec; border-color: #f48fb1; color: #880e4f;
+            background: #eddde2; border-color: #d9a8a2; color: #7a3a4a;
         }
         .earn-summary {
             display: flex; gap: 12px; flex-wrap: wrap;
         }
         .earn-card {
-            background: #f5f5f5; border-radius: 10px;
+            background: #eef2f6; border-radius: 10px;
             padding: 10px 16px; display: inline-flex;
             flex-direction: column; min-width: 0;
         }
@@ -247,28 +247,28 @@
         .earn-card-value {
             font-size: 20px; font-weight: bold; color: #333; white-space: nowrap;
         }
-        .earn-card.accent { background: #e8f5e9; }
-        .earn-card.accent .earn-card-value { color: #2e7d32; }
+        .earn-card.accent { background: #dbe8e2; }
+        .earn-card.accent .earn-card-value { color: #2f5c4c; }
 
         /* ===== ЦВЕТА КАТЕГОРИЙ — фон всей строки ===== */
-        .cat-master td      { background: #c8e6c9 !important; color: #1b5e20; font-weight: bold; }
-        .cat-admin td       { background: #bbdefb !important; color: #0d47a1; font-weight: bold; }
-        .cat-capsulator td  { background: #e1bee7 !important; color: #6b4415; font-weight: bold; }
-        .cat-cleaner td     { background: #fff9c4 !important; color: #e65100; font-weight: bold; }
-        .cat-pomoga td      { background: #f8bbd0 !important; color: #880e4f; font-weight: bold; }
-        .cat-manager td     { background: #b2dfdb !important; color: #004d40; font-weight: bold; }
-        .cat-upravlyayuschiy td { background: #ffe0b2 !important; color: #bf360c; font-weight: bold; }
-        .cat-assistant td { background: #e8eaf6 !important; color: #283593; font-weight: bold; }
-        .cat-smm td       { background: #fce4ec !important; color: #880e4f; font-weight: bold; }
+        .cat-master td      { background: #d7e6ee !important; color: #1f4a63; font-weight: bold; }
+        .cat-admin td       { background: #d9e8e0 !important; color: #2c5c48; font-weight: bold; }
+        .cat-capsulator td  { background: #e2e6ec !important; color: #3d4c5c; font-weight: bold; }
+        .cat-cleaner td     { background: #f0e6cf !important; color: #8a6a2e; font-weight: bold; }
+        .cat-pomoga td      { background: #f0dde0 !important; color: #8a4a54; font-weight: bold; }
+        .cat-manager td     { background: #c7dde2 !important; color: #1f5258; font-weight: bold; }
+        .cat-upravlyayuschiy td { background: #f0ddc0 !important; color: #8a5a1e; font-weight: bold; }
+        .cat-assistant td { background: #e6ebf0 !important; color: #3d5468; font-weight: bold; }
+        .cat-smm td       { background: #eddde2 !important; color: #7a4a58; font-weight: bold; }
         /* ============================================== */
 
 
-        .fact-cell-good { background-color: #c8e6c9; }
-        .fact-cell-bad { background-color: #ffcdd2; }
+        .fact-cell-good { background-color: #dbe8e2; }
+        .fact-cell-bad { background-color: #e3b8ad; }
         .earn-per-day { display: block; font-size: 9px; color: #2c3e50; margin-top: 2px; }
 
         .earnings-block {
-            background: #e3f2fd; padding: 15px; margin-top: 20px;
+            background: #dde8f0; padding: 15px; margin-top: 20px;
             border-radius: 8px; font-weight: bold;
         }
 
@@ -277,9 +277,9 @@
             color: white; border: none; border-radius: 6px; cursor: pointer;
         }
         .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-        .logout-btn { background: #f44336; }
+        .logout-btn { background: #c0574a; }
         .refresh-btn { background: #6a90b0; }
-        .warning { color: #f44336; font-size: 12px; margin-top: 5px; }
+        .warning { color: #c0574a; font-size: 12px; margin-top: 5px; }
         .welcome { margin-bottom: 12px; font-size: 20px; color: #1e2e3a; font-weight: bold; }
         .app-header { background: white; border-radius: 12px; padding: 18px 24px 14px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
         .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
@@ -294,8 +294,8 @@
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast-icon { font-size: 18px; }
         .toast-text { color: #333; }
-        .toast.success { border-left: 4px solid #4caf50; }
-        .toast.error   { border-left: 4px solid #f44336; }
+        .toast.success { border-left: 4px solid #6a9e8a; }
+        .toast.error   { border-left: 4px solid #c0574a; }
         .toast.loading { border-left: 4px solid #6a90b0; }
 
 
@@ -316,7 +316,7 @@
             display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px;
         }
         .metrics-card {
-            background: #f5f5f5; border-radius: 10px;
+            background: #eef2f6; border-radius: 10px;
             padding: 10px 16px; display: inline-flex;
             flex-direction: column; min-width: 0;
         }
@@ -326,9 +326,9 @@
         .metrics-card-value {
             font-size: 20px; font-weight: bold; color: #333; white-space: nowrap;
         }
-        .metrics-card.good .metrics-card-value { color: #2e7d32; }
-        .metrics-card.warn .metrics-card-value { color: #e65100; }
-        .metrics-card.bad  .metrics-card-value { color: #c62828; }
+        .metrics-card.good .metrics-card-value { color: #2f5c4c; }
+        .metrics-card.warn .metrics-card-value { color: #8a5a1e; }
+        .metrics-card.bad  .metrics-card-value { color: #a6483a; }
         .chart-wrap {
             width: 100%; overflow-x: auto; margin-top: 8px;
         }
@@ -341,11 +341,11 @@
         }
         .tab-btn {
             padding: 8px 20px; border-radius: 8px 8px 0 0;
-            background: #e0e0e0; color: #555; border: none;
+            background: #dbe4ea; color: #555; border: none;
             cursor: pointer; font-size: 13px; font-weight: bold;
             margin: 0; transition: background 0.2s;
         }
-        .tab-btn.active { background: white; color: #1976d2; border-bottom: 2px solid white; }
+        .tab-btn.active { background: white; color: #6a90b0; border-bottom: 2px solid white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -365,14 +365,14 @@
         .metrics-section-title {
             font-size: 14px; font-weight: bold; color: #555;
             margin-bottom: 10px; padding: 6px 10px;
-            background: #f5f5f5; border-radius: 6px;
+            background: #eef2f6; border-radius: 6px;
         }
         .metrics-grid {
             display: grid; gap: 8px;
         }
         .metrics-row {
             display: flex; align-items: center; gap: 10px;
-            padding: 8px 10px; background: #fafafa;
+            padding: 8px 10px; background: #f3f6f9;
             border-radius: 8px; flex-wrap: wrap;
             width: fit-content; min-width: 0;
         }
@@ -397,15 +397,15 @@
         .metrics-field-input:focus { outline: 2px solid #6a90b0; border-color: #6a90b0; }
 
         .metrics-manager-section-label {
-            font-size: 11px; font-weight: bold; color: #00897b;
+            font-size: 11px; font-weight: bold; color: #2f6d74;
             text-transform: uppercase; letter-spacing: 0.5px;
             margin: 8px 0 4px; padding: 0 2px;
         }
         .metrics-field-readonly {
             width: 90px; padding: 5px 8px; font-size: 13px;
-            background: #f0f4ff; border: 1px solid #c5cae9;
+            background: #eaf1f6; border: 1px solid #c7d6e0;
             border-radius: 6px; text-align: right;
-            font-weight: bold; color: #283593;
+            font-weight: bold; color: #3d5468;
         }
 
         /* ================================= */
@@ -416,23 +416,23 @@
         }
         .metrics-sub-btn {
             padding: 7px 16px; border-radius: 8px;
-            background: #e0e0e0; color: #555; border: none;
+            background: #dbe4ea; color: #555; border: none;
             cursor: pointer; font-size: 13px; font-weight: bold;
             margin: 0; transition: background 0.2s;
         }
-        .metrics-sub-btn.active { background: #1976d2; color: white; }
+        .metrics-sub-btn.active { background: #6a90b0; color: white; }
 
         /* ===== ЦВЕТА КАТЕГОРИЙ В ПОКАЗАТЕЛЯХ ===== */
-        .metrics-cat-master   { background: #e8f5e9; border-left: 4px solid #43a047; }
-        .metrics-cat-admin    { background: #e3f2fd; border-left: 4px solid #1976d2; }
-        .metrics-cat-manager  { background: #e0f2f1; border-left: 4px solid #00897b; }
+        .metrics-cat-master   { background: #eaf1f6; border-left: 4px solid #6a90b0; }
+        .metrics-cat-admin    { background: #e6f0ec; border-left: 4px solid #4a8a72; }
+        .metrics-cat-manager  { background: #e2eef0; border-left: 4px solid #2f6d74; }
         .metrics-cat-label {
             font-size: 12px; font-weight: bold; padding: 6px 12px;
             border-radius: 6px; margin: 12px 0 6px;
         }
-        .metrics-cat-label.master  { background: #c8e6c9; color: #1b5e20; }
-        .metrics-cat-label.admin   { background: #bbdefb; color: #0d47a1; }
-        .metrics-cat-label.manager { background: #b2dfdb; color: #004d40; }
+        .metrics-cat-label.master  { background: #d7e6ee; color: #1f4a63; }
+        .metrics-cat-label.admin   { background: #d9e8e0; color: #2c5c48; }
+        .metrics-cat-label.manager { background: #c7dde2; color: #1f5258; }
         /* ========================================= */
 
         /* ===== ИТОГИ В ЕЖЕДНЕВНЫХ ПОКАЗАТЕЛЯХ ===== */
@@ -1557,7 +1557,7 @@ function renderMainTable(groups, dates, financeMap) {
     // Строка 1: номера дней
     html += '<tr><th>Сотрудник / День</th>';
     for (var i = 0; i < dates.length; i++) {
-        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : '';
+        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : '';
         html += '<th' + wkStyle + '>' + (i + 1) + '</th>';
     }
     html += '<th>Итого</th>';
@@ -1565,9 +1565,9 @@ function renderMainTable(groups, dates, financeMap) {
     html += '</tr>';
 
     // Строка 2: дни недели
-    html += '<tr><th style="background:#fafafa;">день недели</th>';
+    html += '<tr><th style="background:#f3f6f9;">день недели</th>';
     for (var i = 0; i < dates.length; i++) {
-        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : ' style="background:#fafafa;"';
+        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : ' style="background:#f3f6f9;"';
         html += '<th' + wkStyle + '>' + dayOfWeekShort(dates[i]) + '</th>';
     }
     html += '<th></th>';
@@ -1576,7 +1576,7 @@ function renderMainTable(groups, dates, financeMap) {
 
     if (isAdmin) {
         // Строка 3: План
-        html += '<tr style="background:#fff3e0;"><th><strong>План</strong></th>';
+        html += '<tr style="background:#f2e6d3;"><th><strong>План</strong></th>';
         for (var i = 0; i < dates.length; i++) {
             var date = dates[i];
             var val = (financeMap[date] && financeMap[date].plan) || 0;
@@ -1591,7 +1591,7 @@ function renderMainTable(groups, dates, financeMap) {
         html += '</tr>';
 
         // Строка 4: Факт
-        html += '<tr style="background:#fff3e0;"><th><strong>Факт</strong></th>';
+        html += '<tr style="background:#f2e6d3;"><th><strong>Факт</strong></th>';
         for (var i = 0; i < dates.length; i++) {
             var date = dates[i];
             var plan = (financeMap[date] && financeMap[date].plan) || 0;
@@ -1747,15 +1747,15 @@ function renderAdminTable(adminGroups, financeMap, dates) {
             // Строка 1: номера дней
             html += '<tr><th style="text-align:left;">' + group.category + '</th>';
             for (var i = 0; i < dates.length; i++) {
-                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : '';
+                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : '';
                 html += '<th' + wkStyle + '>' + (i + 1) + '</th>';
             }
             html += '<th>Дней</th><th>Заработок</th></tr>';
 
             // Строка 2: дни недели
-            html += '<tr><th style="background:#fafafa;"></th>';
+            html += '<tr><th style="background:#f3f6f9;"></th>';
             for (var i = 0; i < dates.length; i++) {
-                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#ffebee;"' : ' style="background:#fafafa;"';
+                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : ' style="background:#f3f6f9;"';
                 html += '<th' + wkStyle + '>' + dayOfWeekShort(dates[i]) + '</th>';
             }
             html += '<th></th><th></th></tr>';
@@ -1992,7 +1992,7 @@ function renderMobileEmployeeSchedule(dates, financeMap) {
     html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">';
     for (var d = 0; d < 7; d++) {
         var isWknd = d >= 5;
-        html += '<div style="text-align:center;font-size:10px;font-weight:bold;color:' + (isWknd ? '#e57373' : '#888') + ';">' + dayLabels[d] + '</div>';
+        html += '<div style="text-align:center;font-size:10px;font-weight:bold;color:' + (isWknd ? '#b98276' : '#888') + ';">' + dayLabels[d] + '</div>';
     }
     html += '</div>';
 
@@ -2020,13 +2020,13 @@ function renderMobileEmployeeSchedule(dates, financeMap) {
 
             var bg, color, border;
             if (isWork) {
-                bg = isWknd ? '#fce4ec' : '#e8f5e9';
-                color = isWknd ? '#880e4f' : '#2e7d32';
-                border = isWknd ? '2px solid #f48fb1' : '2px solid #a5d6a7';
+                bg = isWknd ? '#eddde2' : '#dbe8e2';
+                color = isWknd ? '#7a3a4a' : '#2f5c4c';
+                border = isWknd ? '2px solid #d9a8a2' : '2px solid #a9c9bd';
             } else {
-                bg = isWknd ? '#fff5f5' : '#fafafa';
-                color = isWknd ? '#e57373' : '#bbb';
-                border = '1px solid ' + (isWknd ? '#ffcdd2' : '#eee');
+                bg = isWknd ? '#f7ece9' : '#f3f6f9';
+                color = isWknd ? '#b98276' : '#bbb';
+                border = '1px solid ' + (isWknd ? '#e3b8ad' : '#eee');
             }
 
             html += '<div style="text-align:center;padding:6px 2px;border-radius:8px;' +
@@ -2423,7 +2423,7 @@ function renderMetrics() {
     // ---- БЛОК KPI АДМИНИСТРАТОРА ----
     if (myAdminMonthly && (category === 'Администратор' || isDual)) {
         hasAnyData = true;
-        if (isDual) html += '<div class="metrics-section-label" style="color:#1976d2;">🗂 За администратора</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#6a90b0;">🗂 За администратора</div>';
         else        html += '<div class="metrics-section-label">За месяц</div>';
         html += '<div class="metrics-cards">';
         var reviews  = parseInt(myAdminMonthly.reviews)||0;
@@ -2470,9 +2470,9 @@ function renderMetrics() {
 /* Карточка с акцентным цветом */
 function mCard(accent, label, value, icon) {
     var bg = '';
-    if (accent === 'accent-green')  bg = 'background:#e8f5e9;';
+    if (accent === 'accent-green')  bg = 'background:#dbe8e2;';
     if (accent === 'accent-purple') bg = 'background:#f7ecd9;';
-    if (accent === 'accent-blue')   bg = 'background:#e3f2fd;';
+    if (accent === 'accent-blue')   bg = 'background:#dde8f0;';
     return '<div class="metrics-card" style="' + bg + '">' +
         '<div class="metrics-card-label">' + (icon ? icon + ' ' : '') + label + '</div>' +
         '<div class="metrics-card-value">' + value + '</div>' +
@@ -2481,8 +2481,8 @@ function mCard(accent, label, value, icon) {
 
 /* KPI-карточка с иконкой статуса и цветом значения */
 function mKpiCard(label, value, icon, color, suffix) {
-    var valColor = color==='green'?'#2e7d32':color==='orange'?'#e65100':'#c62828';
-    var bg = color==='green'?'background:#e8f5e9;':color==='orange'?'background:#fff3e0;':'background:#ffebee;';
+    var valColor = color==='green'?'#2f5c4c':color==='orange'?'#8a5a1e':'#a6483a';
+    var bg = color==='green'?'background:#dbe8e2;':color==='orange'?'background:#f2e6d3;':'background:#f2ded9;';
     return '<div class="metrics-card" style="' + bg + '">' +
         '<div class="metrics-card-label">' + label + '</div>' +
         '<div style="display:flex;align-items:center;gap:6px;">' +
@@ -2510,7 +2510,7 @@ function buildManagerChart(sections) {
     if (maxVal === 0) return '';
 
     var barW = 20, gap = 5, groupGap = 28;
-    var colors = ['#42a5f5','#66bb6a','#ab47bc'];
+    var colors = ['#6a90b0','#6a9e8a','#b8823e'];
     var keys = ['new','old','total'];
     var keyLabels = ['Новые','Старые','Общие'];
 
@@ -2573,22 +2573,22 @@ function buildMetricsChart(data) {
         // Столбик доп.продаж
         var salesH = (sales / maxVal) * chartH;
         var salesY = padT + chartH - salesH;
-        bars += '<rect x="'+gx+'" y="'+salesY+'" width="'+barW+'" height="'+salesH+'" fill="#43a047" rx="3" opacity="0.85"/>';
-        if (sales > 0) bars += '<text x="'+(gx+barW/2)+'" y="'+(salesY-3)+'" text-anchor="middle" font-size="8" fill="#2e7d32">'+formatNumber(sales)+'</text>';
+        bars += '<rect x="'+gx+'" y="'+salesY+'" width="'+barW+'" height="'+salesH+'" fill="#6a9e8a" rx="3" opacity="0.85"/>';
+        if (sales > 0) bars += '<text x="'+(gx+barW/2)+'" y="'+(salesY-3)+'" text-anchor="middle" font-size="8" fill="#2f5c4c">'+formatNumber(sales)+'</text>';
 
         // Столбик косметики
         var cosmH = (cosm / maxVal) * chartH;
         var cosmY = padT + chartH - cosmH;
         var cx2 = gx+barW+gap;
-        bars += '<rect x="'+cx2+'" y="'+cosmY+'" width="'+barW+'" height="'+cosmH+'" fill="#ab47bc" rx="3" opacity="0.85"/>';
+        bars += '<rect x="'+cx2+'" y="'+cosmY+'" width="'+barW+'" height="'+cosmH+'" fill="#b8823e" rx="3" opacity="0.85"/>';
         if (cosm > 0) bars += '<text x="'+(cx2+barW/2)+'" y="'+(cosmY-3)+'" text-anchor="middle" font-size="8" fill="#8a5a1e">'+formatNumber(cosm)+'</text>';
 
         // Столбик продаж волос
         var hairH = (hair / maxVal) * chartH;
         var hairY = padT + chartH - hairH;
         var cx3 = gx+2*(barW+gap);
-        bars += '<rect x="'+cx3+'" y="'+hairY+'" width="'+barW+'" height="'+hairH+'" fill="#42a5f5" rx="3" opacity="0.85"/>';
-        if (hair > 0) bars += '<text x="'+(cx3+barW/2)+'" y="'+(hairY-3)+'" text-anchor="middle" font-size="8" fill="#1565c0">'+formatNumber(hair)+'</text>';
+        bars += '<rect x="'+cx3+'" y="'+hairY+'" width="'+barW+'" height="'+hairH+'" fill="#6a90b0" rx="3" opacity="0.85"/>';
+        if (hair > 0) bars += '<text x="'+(cx3+barW/2)+'" y="'+(hairY-3)+'" text-anchor="middle" font-size="8" fill="#3a5570">'+formatNumber(hair)+'</text>';
 
         // Подпись дня
         labels += '<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#555">'+dayNum+'</text>';
@@ -2596,11 +2596,11 @@ function buildMetricsChart(data) {
 
     // Легенда
     var legend =
-        '<rect x="'+padL+'" y="6" width="9" height="9" fill="#43a047" rx="2"/>' +
+        '<rect x="'+padL+'" y="6" width="9" height="9" fill="#6a9e8a" rx="2"/>' +
         '<text x="'+(padL+12)+'" y="14" font-size="9" fill="#555">Доп. продажи</text>' +
-        '<rect x="'+(padL+90)+'" y="6" width="9" height="9" fill="#ab47bc" rx="2"/>' +
+        '<rect x="'+(padL+90)+'" y="6" width="9" height="9" fill="#b8823e" rx="2"/>' +
         '<text x="'+(padL+102)+'" y="14" font-size="9" fill="#555">Косметика</text>' +
-        '<rect x="'+(padL+170)+'" y="6" width="9" height="9" fill="#42a5f5" rx="2"/>' +
+        '<rect x="'+(padL+170)+'" y="6" width="9" height="9" fill="#6a90b0" rx="2"/>' +
         '<text x="'+(padL+182)+'" y="14" font-size="9" fill="#555">Продажа волос</text>';
 
     // Горизонтальная линия основания
