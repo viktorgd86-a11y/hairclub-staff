@@ -6,7 +6,7 @@
     <title>Учёт смен сотрудников</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f6f8fa; }
 
         .login-container {
             max-width: 350px; margin: 50px auto; padding: 25px; background: white;
@@ -19,7 +19,7 @@
             border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
         }
         .login-container button {
-            background: #2196f3; color: white; border: none;
+            background: #6a90b0; color: white; border: none;
             padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
         }
 
@@ -106,11 +106,11 @@
             padding: 10px 12px; border-radius: 8px; cursor: pointer;
             border: 2px solid #eee; transition: all 0.15s;
         }
-        .shift-role-option:hover { border-color: #7b1fa2; background: #f9f0ff; }
-        .shift-role-option.selected { border-color: #7b1fa2; background: #f3e5f5; }
-        .shift-role-option input[type=radio] { accent-color: #7b1fa2; }
+        .shift-role-option:hover { border-color: #b8823e; background: #fdf3e6; }
+        .shift-role-option.selected { border-color: #b8823e; background: #f7ecd9; }
+        .shift-role-option input[type=radio] { accent-color: #b8823e; }
         .shift-role-label { flex: 1; font-size: 13px; font-weight: bold; }
-        .shift-role-pct { font-size: 12px; color: #7b1fa2; font-weight: bold; }
+        .shift-role-pct { font-size: 12px; color: #b8823e; font-weight: bold; }
         .shift-comment-wrap { margin-bottom: 14px; }
         .shift-comment-label { font-size: 11px; color: #888; margin-bottom: 4px; }
         .shift-comment-input {
@@ -128,11 +128,11 @@
         /* ======================== */
         /* ===== ДВОЙНАЯ ДОЛЖНОСТЬ ===== */
         .dual-badge {
-            display: inline-block; font-size: 8px; background: #7b1fa2;
+            display: inline-block; font-size: 8px; background: #b8823e;
             color: white; border-radius: 3px; padding: 0 3px;
             vertical-align: middle; margin-left: 2px;
         }
-        .dual-row td:first-child { border-left: 3px solid #7b1fa2 !important; }
+        .dual-row td:first-child { border-left: 3px solid #b8823e !important; }
 
         /* Модальное окно */
         .modal-overlay {
@@ -160,10 +160,10 @@
             border: 1px solid #eee; transition: background 0.15s;
         }
         .modal-emp-item:hover { background: #f5f5f5; }
-        .modal-emp-item.selected { background: #f3e5f5; border-color: #7b1fa2; }
+        .modal-emp-item.selected { background: #f7ecd9; border-color: #b8823e; }
         .modal-emp-name { font-size: 13px; font-weight: bold; flex: 1; }
         .modal-emp-cat { font-size: 11px; color: #888; }
-        .modal-dual-badge { font-size: 10px; background: #7b1fa2; color: white; padding: 2px 6px; border-radius: 4px; }
+        .modal-dual-badge { font-size: 10px; background: #b8823e; color: white; padding: 2px 6px; border-radius: 4px; }
         .modal-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
         .modal-field-row { display: flex; gap: 8px; align-items: center; }
         .modal-field-label { font-size: 12px; color: #555; width: 70px; flex-shrink: 0; }
@@ -172,7 +172,7 @@
             border-radius: 6px; font-size: 13px;
         }
         .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-        .modal-btn-save { background: #7b1fa2; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .modal-btn-save { background: #b8823e; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .modal-btn-remove { background: #f44336; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .modal-btn-cancel { background: #e0e0e0; color: #333; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         /* ============================== */
@@ -184,9 +184,9 @@
             color: white; border-radius: 3px; padding: 0 3px; margin-left: 2px;
         }
         /* ============================== */
-        .work-cell { background: #c8e6c9; cursor: pointer; }
-        .work-cell:hover { background: #a5d6a7; }
-        .weekend { background-color: #ffebee; }
+        .work-cell { background: #6a90b0; color: #fff; cursor: pointer; }
+        .work-cell:hover { background: #587898; }
+        .weekend { background-color: #f3e2e2; }
 
         .finance-input {
             width: 70px; padding: 2px; font-size: 11px; text-align: right;
@@ -196,7 +196,7 @@
             width: 70px; background: transparent; border: none;
             text-align: right; font-weight: bold; padding: 2px;
         }
-        .fact-input:focus { outline: 1px solid #2196f3; background: white; }
+        .fact-input:focus { outline: 1px solid #6a90b0; background: white; }
 
         .category-header { font-weight: bold; text-align: left; padding: 6px 8px; }
 
@@ -253,7 +253,7 @@
         /* ===== ЦВЕТА КАТЕГОРИЙ — фон всей строки ===== */
         .cat-master td      { background: #c8e6c9 !important; color: #1b5e20; font-weight: bold; }
         .cat-admin td       { background: #bbdefb !important; color: #0d47a1; font-weight: bold; }
-        .cat-capsulator td  { background: #e1bee7 !important; color: #4a148c; font-weight: bold; }
+        .cat-capsulator td  { background: #e1bee7 !important; color: #6b4415; font-weight: bold; }
         .cat-cleaner td     { background: #fff9c4 !important; color: #e65100; font-weight: bold; }
         .cat-pomoga td      { background: #f8bbd0 !important; color: #880e4f; font-weight: bold; }
         .cat-manager td     { background: #b2dfdb !important; color: #004d40; font-weight: bold; }
@@ -273,14 +273,14 @@
         }
 
         button {
-            margin: 5px; padding: 8px 16px; background: #2196f3;
+            margin: 5px; padding: 8px 16px; background: #6a90b0;
             color: white; border: none; border-radius: 6px; cursor: pointer;
         }
         .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
         .logout-btn { background: #f44336; }
-        .refresh-btn { background: #4caf50; }
+        .refresh-btn { background: #6a90b0; }
         .warning { color: #f44336; font-size: 12px; margin-top: 5px; }
-        .welcome { margin-bottom: 12px; font-size: 20px; color: #333; font-weight: bold; }
+        .welcome { margin-bottom: 12px; font-size: 20px; color: #1e2e3a; font-weight: bold; }
         .app-header { background: white; border-radius: 12px; padding: 18px 24px 14px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
         .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
         .toast {
@@ -296,7 +296,7 @@
         .toast-text { color: #333; }
         .toast.success { border-left: 4px solid #4caf50; }
         .toast.error   { border-left: 4px solid #f44336; }
-        .toast.loading { border-left: 4px solid #2196f3; }
+        .toast.loading { border-left: 4px solid #6a90b0; }
 
 
         /* ===== БЛОК ПОКАЗАТЕЛЕЙ ===== */
@@ -394,7 +394,7 @@
             border: 1px solid #ddd; border-radius: 6px;
             text-align: right;
         }
-        .metrics-field-input:focus { outline: 2px solid #2196f3; border-color: #2196f3; }
+        .metrics-field-input:focus { outline: 2px solid #6a90b0; border-color: #6a90b0; }
 
         .metrics-manager-section-label {
             font-size: 11px; font-weight: bold; color: #00897b;
@@ -449,7 +449,7 @@
         /* ============================================ */
         /* ===== НУМЕРОЛОГИЯ ===== */
         .numerology-block {
-            background: linear-gradient(135deg, #f3e5f5 0%, #e8eaf6 100%);
+            background: linear-gradient(135deg, #f7ecd9 0%, #eef2f6 100%);
             border-radius: 14px; padding: 20px 24px; margin-top: 16px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08); position: relative;
             overflow: hidden;
@@ -459,18 +459,18 @@
             font-size: 28px; opacity: 0.4;
         }
         .numerology-title {
-            font-size: 13px; color: #7b1fa2; font-weight: bold;
+            font-size: 13px; color: #b8823e; font-weight: bold;
             margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .numerology-number {
-            font-size: 36px; font-weight: bold; color: #6a1b9a;
+            font-size: 36px; font-weight: bold; color: #8a5a1e;
             line-height: 1; margin-bottom: 10px;
         }
         .numerology-text {
-            font-size: 14px; color: #4a148c; line-height: 1.6;
+            font-size: 14px; color: #6b4415; line-height: 1.6;
         }
         .numerology-loading {
-            font-size: 13px; color: #9c27b0; font-style: italic;
+            font-size: 13px; color: #b8823e; font-style: italic;
         }
         /* ========================= */
 
@@ -559,7 +559,7 @@
         <label>Месяц: <select id="monthSelect"></select></label>
         <label>Год: <input type="number" id="yearInput" value="2026" min="2026" style="width:80px" /></label>
         <button onclick="refreshData()" class="refresh-btn">🔄 Обновить</button>
-        <button id="dualRoleBtn" onclick="openDualRoleModal()" style="display:none;background:#7b1fa2;">👥 Двойная должность</button>
+        <button id="dualRoleBtn" onclick="openDualRoleModal()" style="display:none;background:#b8823e;">👥 Двойная должность</button>
         <button onclick="logout()" class="logout-btn">Выйти</button>
     </div>
     </div>
@@ -628,7 +628,7 @@
         <div style="font-size:12px;color:#888;margin-bottom:12px;">Выберите сотрудника и укажите два процента с подписями</div>
         <div id="dualEmpList" class="modal-emp-list"></div>
         <div id="dualFields" class="modal-fields" style="display:none;">
-            <div style="font-size:12px;font-weight:bold;color:#7b1fa2;margin-bottom:4px;" id="dualSelectedName"></div>
+            <div style="font-size:12px;font-weight:bold;color:#b8823e;margin-bottom:4px;" id="dualSelectedName"></div>
             <div class="modal-field-row">
                 <span class="modal-field-label">Процент 1</span>
                 <input class="modal-field-input" id="dualP1" type="number" step="0.1" placeholder="2.7">
@@ -983,6 +983,7 @@ function openDualRoleModal() {
     for (var entry of employeesMap.entries()) {
         var login = entry[0];
         var info = entry[1];
+        if (info.date_fired) continue; // не предлагаем уволенных
         if (['Мастер','Администратор','Капсулятор'].indexOf(info.category) !== -1) {
             poolEmps.push({ login: login, fullname: info.fullname, category: info.category });
         }
@@ -1313,7 +1314,8 @@ function refreshData() {
                 percent: emp.percent,
                 role: emp.role,
                 fullname: emp.fullname,
-                tech_percent: emp.tech_percent || 0
+                tech_percent: emp.tech_percent || 0,
+                date_fired: emp.date_fired || ''
             });
         }
 
@@ -1356,6 +1358,9 @@ function renderAll() {
     for (var entry of employeesMap.entries()) {
         var login = entry[0];
         var info = entry[1];
+
+        // Уволенные до начала этого месяца — не показываем и не считаем
+        if (info.date_fired && info.date_fired < firstDayOfMonth) continue;
 
         // Берём категорию на первый день выбранного месяца
         var category = getCategoryForDate(login, firstDayOfMonth);
@@ -2107,9 +2112,11 @@ function loadMetricsAdmin() {
 
     // Собираем сотрудников по категориям
     var byCategory = {};
+    var metricsFirstDay = (currentMetricsTab === 'daily' ? (date ? date.substring(0,7) : '') : month) + '-01';
     for (var entry of employeesMap.entries()) {
         var login = entry[0];
         var info = entry[1];
+        if (info.date_fired && info.date_fired < metricsFirstDay) continue;
         var cat = info.category;
         if (!DAILY_FIELDS[cat] && !MONTHLY_FIELDS[cat]) continue;
         if (!byCategory[cat]) byCategory[cat] = [];
@@ -2385,7 +2392,7 @@ function renderMetrics() {
             totCosm  += parseFloat(d.cosmetics)||0;
             totHair  += parseFloat(d.hair_sales)||0;
         });
-        if (isDual) html += '<div class="metrics-section-label" style="color:#7b1fa2;">🎨 За мастера — продажи</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#b8823e;">🎨 За мастера — продажи</div>';
         else        html += '<div class="metrics-section-label">Продажи за месяц</div>';
         html += '<div class="metrics-cards">';
         html += mCard('accent-green',  'Доп. продажи',   formatNumber(totSales) + ' ₽', '💰');
@@ -2401,7 +2408,7 @@ function renderMetrics() {
     // ---- БЛОК KPI МАСТЕРА ----
     if (myMasterMonthly && (category === 'Мастер' || isDual)) {
         hasAnyData = true;
-        if (isDual) html += '<div class="metrics-section-label" style="color:#7b1fa2;">🎨 За мастера — качество</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#b8823e;">🎨 За мастера — качество</div>';
         else        html += '<div class="metrics-section-label">Качество работы</div>';
         html += '<div class="metrics-cards">';
         var complaints = parseInt(myMasterMonthly.complaints)||0;
@@ -2464,7 +2471,7 @@ function renderMetrics() {
 function mCard(accent, label, value, icon) {
     var bg = '';
     if (accent === 'accent-green')  bg = 'background:#e8f5e9;';
-    if (accent === 'accent-purple') bg = 'background:#f3e5f5;';
+    if (accent === 'accent-purple') bg = 'background:#f7ecd9;';
     if (accent === 'accent-blue')   bg = 'background:#e3f2fd;';
     return '<div class="metrics-card" style="' + bg + '">' +
         '<div class="metrics-card-label">' + (icon ? icon + ' ' : '') + label + '</div>' +
@@ -2520,7 +2527,7 @@ function buildManagerChart(sections) {
         });
         var cx = groupX + (3*barW + 2*gap) / 2;
         xLabels += '<text x="'+cx+'" y="'+(H-20)+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#333">'+s.name+'</text>';
-        xLabels += '<text x="'+cx+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" fill="#7b1fa2">'+s.conv+'% конв.</text>';
+        xLabels += '<text x="'+cx+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" fill="#b8823e">'+s.conv+'% конв.</text>';
     });
 
     var legend = keyLabels.map(function(l, i) {
@@ -2574,7 +2581,7 @@ function buildMetricsChart(data) {
         var cosmY = padT + chartH - cosmH;
         var cx2 = gx+barW+gap;
         bars += '<rect x="'+cx2+'" y="'+cosmY+'" width="'+barW+'" height="'+cosmH+'" fill="#ab47bc" rx="3" opacity="0.85"/>';
-        if (cosm > 0) bars += '<text x="'+(cx2+barW/2)+'" y="'+(cosmY-3)+'" text-anchor="middle" font-size="8" fill="#6a1b9a">'+formatNumber(cosm)+'</text>';
+        if (cosm > 0) bars += '<text x="'+(cx2+barW/2)+'" y="'+(cosmY-3)+'" text-anchor="middle" font-size="8" fill="#8a5a1e">'+formatNumber(cosm)+'</text>';
 
         // Столбик продаж волос
         var hairH = (hair / maxVal) * chartH;
