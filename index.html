@@ -37,6 +37,7 @@
         .manager-table-container {
             overflow-x: auto; overflow-y: auto; max-height: 40vh;
             margin-top: 0; border: 1px solid #aaa; background: white;
+            width: fit-content; max-width: 100%;
         }
         .manager-title {
             font-weight: bold; font-size: 14px; margin: 20px 0 5px;
@@ -194,6 +195,11 @@
         .emp-btn { border: none; border-radius: 7px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
         .emp-btn-edit { background: #0ea5ff; color: #fff; }
         .emp-btn-fire { background: #ff3b6e; color: #fff; }
+        .emp-group-label {
+            font-size: 12px; font-weight: bold; padding: 6px 12px;
+            border-radius: 6px; margin: 14px 0 6px;
+        }
+        .emp-group-label:first-child { margin-top: 0; }
         .emp-btn-absence { background: #b8823e; color: #fff; }
         .emp-btn-rehire { background: #7bc300; color: #fff; }
         .absence-day-grid {
@@ -312,6 +318,7 @@
             background: #e6f6ff; padding: 15px; margin-top: 20px;
             border-radius: 8px; font-weight: bold;
         }
+        .earnings-block:empty { background: none; padding: 0; margin-top: 0; }
 
         button {
             margin: 5px; padding: 8px 16px; background: #0ea5ff;
@@ -2295,39 +2302,75 @@ function renderEmployeesTab() {
     var container = document.getElementById('employeesListContent');
     if (!container) return;
 
-    var list = [];
+    var EMP_GROUP_COLORS = {
+        'Мастер':        { bg: '#e6f6ff', text: '#0077b3' },
+        'Администратор': { bg: '#eeffd6', text: '#3f6600' },
+        'Капсулятор':    { bg: '#e2e6ec', text: '#3d4c5c' },
+        'Уборщица':      { bg: '#f0e6cf', text: '#8a6a2e' },
+        'Подмога':       { bg: '#fff0f3', text: '#a30030' },
+        'Менеджер':      { bg: '#c7dde2', text: '#1f5258' },
+        'Управляющий':   { bg: '#f0ddc0', text: '#8a5a1e' },
+        'Ассистент':     { bg: '#e6ebf0', text: '#3d5468' },
+        'SMM':           { bg: '#ffe4e6', text: '#a30030' }
+    };
+
+    var active = [];
+    var fired = [];
     for (var entry of employeesMap.entries()) {
         var login = entry[0];
         var info = entry[1];
-        if (login === 'vikkrest') continue; // владельца системы не показываем и не даём редактировать/увольнять
-        list.push({ login: login, info: info });
+        if (info.role === 'admin') continue; // системных админов не показываем и не даём редактировать/увольнять
+        if (info.date_fired) fired.push({ login: login, info: info });
+        else active.push({ login: login, info: info });
     }
-    list.sort(function(a, b) {
-        var af = !!a.info.date_fired, bf = !!b.info.date_fired;
-        if (af !== bf) return af ? 1 : -1;
-        return (a.info.fullname || '').localeCompare(b.info.fullname || '');
+
+    // Группируем активных по категории в порядке allCategories
+    var byCategory = {};
+    active.forEach(function(emp) {
+        var cat = emp.info.category || 'Без категории';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(emp);
+    });
+    Object.keys(byCategory).forEach(function(cat) {
+        byCategory[cat].sort(function(a, b) { return (a.info.fullname || '').localeCompare(b.info.fullname || ''); });
     });
 
-    var html = '';
-    list.forEach(function(emp) {
+    var orderedCats = allCategories.filter(function(c) { return byCategory[c]; });
+    Object.keys(byCategory).forEach(function(c) { if (orderedCats.indexOf(c) === -1) orderedCats.push(c); });
+
+    fired.sort(function(a, b) { return (a.info.fullname || '').localeCompare(b.info.fullname || ''); });
+
+    function renderEmpRow(emp, isFired) {
         var info = emp.info;
-        var isFired = !!info.date_fired;
-        html += '<div class="emp-list-row' + (isFired ? ' fired' : '') + '">';
-        html += '<span class="emp-list-name">' + (info.fullname || emp.login) + '</span>';
-        html += '<span class="emp-list-meta">' + (info.category || '—') + ' · ' + (info.percent || 0) + '%</span>';
-        if (isFired) html += '<span class="emp-list-meta" style="color:#ff3b6e;">уволен ' + formatDisplayDate(info.date_fired) + '</span>';
-        html += '<div class="emp-list-actions">';
+        var row = '<div class="emp-list-row' + (isFired ? ' fired' : '') + '">';
+        row += '<span class="emp-list-name">' + (info.fullname || emp.login) + '</span>';
+        row += '<span class="emp-list-meta">' + (info.percent || 0) + '%</span>';
+        if (isFired) row += '<span class="emp-list-meta" style="color:#ff3b6e;">уволен ' + formatDisplayDate(info.date_fired) + '</span>';
+        row += '<div class="emp-list-actions">';
         if (!isFired) {
-            html += '<button class="emp-btn emp-btn-edit" onclick="openEditEmpModal(\'' + emp.login + '\')">Изменить</button>';
+            row += '<button class="emp-btn emp-btn-edit" onclick="openEditEmpModal(\'' + emp.login + '\')">Изменить</button>';
             if (['Ассистент', 'Менеджер'].indexOf(info.category) !== -1) {
-                html += '<button class="emp-btn emp-btn-absence" onclick="openAbsenceModal(\'' + emp.login + '\')">Б/О</button>';
+                row += '<button class="emp-btn emp-btn-absence" onclick="openAbsenceModal(\'' + emp.login + '\')">Б/О</button>';
             }
-            html += '<button class="emp-btn emp-btn-fire" onclick="openFireModal(\'' + emp.login + '\')">Уволить</button>';
+            row += '<button class="emp-btn emp-btn-fire" onclick="openFireModal(\'' + emp.login + '\')">Уволить</button>';
         } else {
-            html += '<button class="emp-btn emp-btn-rehire" onclick="rehireEmployeeAction(\'' + emp.login + '\')">Восстановить</button>';
+            row += '<button class="emp-btn emp-btn-rehire" onclick="rehireEmployeeAction(\'' + emp.login + '\')">Восстановить</button>';
         }
-        html += '</div></div>';
+        row += '</div></div>';
+        return row;
+    }
+
+    var html = '';
+    orderedCats.forEach(function(cat) {
+        var colors = EMP_GROUP_COLORS[cat] || { bg: '#f3f6f9', text: '#555' };
+        html += '<div class="emp-group-label" style="background:' + colors.bg + ';color:' + colors.text + ';">' + cat + '</div>';
+        byCategory[cat].forEach(function(emp) { html += renderEmpRow(emp, false); });
     });
+
+    if (fired.length > 0) {
+        html += '<div class="emp-group-label" style="background:#f3f6f9;color:#888;">Уволенные</div>';
+        fired.forEach(function(emp) { html += renderEmpRow(emp, true); });
+    }
 
     if (!html) html = '<p style="color:#aaa;padding:10px;">Нет сотрудников</p>';
     container.innerHTML = html;
