@@ -263,6 +263,12 @@
         .day-chip.weekend {
             background: #eddde2; border-color: #d9a8a2; color: #7a3a4a;
         }
+        .day-chip.day-chip-vacation {
+            background: #f2e6d3; border-color: #c9974f; color: #8a5a1e;
+        }
+        .day-chip.day-chip-sick {
+            background: #f2ded9; border-color: #d9a8a2; color: #a6483a;
+        }
         .earn-summary {
             display: flex; gap: 12px; flex-wrap: wrap;
         }
@@ -1584,12 +1590,21 @@ function renderAll() {
             var empPercent = getPercentForDate(currentUser.login, lastDayOfMonth, employeesMap);
             var totalEarn = totalFactMonth * empPercent / 100;
 
+            var absenceCount = 0;
+            for (var ai = 0; ai < currentScheduleData.length; ai++) {
+                var ad = currentScheduleData[ai];
+                if (ad.empLogin === currentUser.login && ad.date && ad.date.startsWith(prefix) && (ad.dayType === 'vacation' || ad.dayType === 'sick')) absenceCount++;
+            }
+            var absenceNote = absenceCount > 0
+                ? '<div style="font-size:12px;color:#8a5a1e;margin-top:10px;">🏖 Не учтено в расчёте: ' + absenceCount + ' ' + (absenceCount === 1 ? 'день' : 'дня') + ' (отпуск/больничный)</div>'
+                : '';
+
             document.getElementById('earningsDiv').innerHTML =
                 '<div class="earn-block">' +
                 '<div class="earn-block-title">Расчёт за ' + months[month - 1] + ' ' + year + '</div>' +
                 '<div class="earn-summary">' +
                 '<div class="earn-card accent"><div class="earn-card-label">Заработок ' + (CATEGORY_GENITIVE[currentCategory] || currentCategory) + '</div><div class="earn-card-value">' + formatNumber(totalEarn) + ' ₽</div></div>' +
-                '</div>' +
+                '</div>' + absenceNote +
                 '</div>';
 
         } else {
@@ -1611,6 +1626,16 @@ function renderAll() {
 
             // Проверяем двойную должность
             var empDualRole = getDualRole(currentUser.login);
+
+            // Собираем дни отпуска/больничного за месяц
+            var absenceDates = [];
+            for (var ai = 0; ai < currentScheduleData.length; ai++) {
+                var ad = currentScheduleData[ai];
+                if (ad.empLogin === currentUser.login && ad.date && ad.date.startsWith(prefix) && (ad.dayType === 'vacation' || ad.dayType === 'sick')) {
+                    absenceDates.push({ date: ad.date, type: ad.dayType });
+                }
+            }
+            absenceDates.sort(function(a,b) { return a.date > b.date ? 1 : -1; });
 
             var chipsHtml = '';
             for (var i = 0; i < workedDates.length; i++) {
@@ -1637,6 +1662,18 @@ function renderAll() {
                 } else {
                     chipsHtml += '<div class="day-chip' + (isWknd ? ' weekend' : '') + '">' + dayNum + '</div>';
                 }
+            }
+
+            // Добавляем чипы отпуска/больничного
+            for (var i = 0; i < absenceDates.length; i++) {
+                var d = localDate(absenceDates[i].date);
+                var dayNum = d.getDate();
+                var cls = absenceDates[i].type === 'vacation' ? 'day-chip-vacation' : 'day-chip-sick';
+                var label = absenceDates[i].type === 'vacation' ? 'О' : 'Б';
+                chipsHtml += '<div class="day-chip-wrap">' +
+                    '<div class="day-chip ' + cls + '">' + dayNum + '</div>' +
+                    '<div class="day-chip-comment">' + label + '</div>' +
+                    '</div>';
             }
 
             document.getElementById('earningsDiv').innerHTML =
