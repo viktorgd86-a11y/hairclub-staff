@@ -9,11 +9,11 @@
         body { font-family: Arial, sans-serif; margin: 20px; background: #fafafa; }
 
         .login-container {
-            max-width: 350px; margin: 50px auto; padding: 25px; background: white;
+            max-width: 400px; margin: 50px auto; padding: 30px; background: white;
             border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center;
         }
         .login-container h2 { margin-top: 0; margin-bottom: 20px; font-size: 24px; color: #333; }
-        .login-logo { max-width: 260px; width: 100%; margin: 0 auto 4px; display: block; }
+        .login-logo { max-width: 300px; width: 100%; margin: 0 auto 4px; display: block; }
         .login-subtitle { font-size: 12px; color: #999; margin-bottom: 24px; }
         .loader-anim { width: 90px; margin: 14px auto; display: block; }
         .loading-status { font-size: 13px; color: #0ea5ff; font-weight: bold; animation: loadingBlink 1.6s ease-in-out infinite; }
@@ -37,7 +37,7 @@
         .manager-table-container {
             overflow-x: auto; overflow-y: auto; max-height: 40vh;
             margin-top: 0; border: 1px solid #aaa; background: white;
-            width: fit-content; max-width: 100%;
+            padding: 12px;
         }
         .manager-title {
             font-weight: bold; font-size: 14px; margin: 20px 0 5px;
@@ -195,6 +195,21 @@
         .emp-btn { border: none; border-radius: 7px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
         .emp-btn-edit { background: #0ea5ff; color: #fff; }
         .emp-btn-fire { background: #ff3b6e; color: #fff; }
+        .admin-cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .admin-card {
+            background: #fff; border: 1px solid #eee; border-left: 3px solid #999;
+            border-radius: 10px; padding: 12px 14px;
+        }
+        .admin-card-cat {
+            font-size: 10px; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 6px;
+        }
+        .admin-card-name { font-size: 13px; font-weight: bold; color: #1a1a1a; margin-bottom: 2px; }
+        .admin-card-val { font-size: 16px; font-weight: bold; }
+        .admin-card-pct { font-size: 10px; color: #999; margin-top: 2px; }
         .emp-group-label {
             font-size: 12px; font-weight: bold; padding: 6px 12px;
             border-radius: 6px; margin: 14px 0 6px;
@@ -2039,10 +2054,16 @@ function renderAdminTable(adminGroups, financeMap, dates) {
             html += '</tbody></table>';
 
         } else {
-            // ---- Таблица БЕЗ графика (% от общей выручки) ----
-            html += '<table class="manager-table" style="min-width:auto; width:auto; margin-bottom:0;">';
-            html += '<tbody>';
-            html += '<tr class="category-header ' + catClass + '"><td colspan="2" style="text-align:left;">📁 ' + group.category + '</td></tr>';
+            // ---- Карточки (% от общей выручки) ----
+            var cardColors = {
+                'Управляющий': { border: '#b8823e', text: '#8a5a1e' },
+                'Менеджер':    { border: '#2f6d74', text: '#1f5258' },
+                'Ассистент':   { border: '#8a97a8', text: '#3d5468' },
+                'SMM':         { border: '#ff3b6e', text: '#a30030' }
+            };
+            var colors = cardColors[group.category] || { border: '#999', text: '#555' };
+
+            html += '<div class="admin-cards-grid">';
 
             for (var ei = 0; ei < group.employees.length; ei++) {
                 var emp = group.employees[ei];
@@ -2053,14 +2074,17 @@ function renderAdminTable(adminGroups, financeMap, dates) {
                 var earn = empTotalFact * percent / 100;
 
                 var isDual = !!getDualRole(emp.login);
-            html += '<tr' + (isDual ? ' class="dual-row"' : '') + '>';
                 var dualBadge = isDual ? '<span class="dual-badge">2×</span>' : '';
-            html += '<td style="text-align:left; font-weight:bold;">' + emp.fullname + dualBadge + '</td>';
-                html += '<td style="text-align:right;"><strong>' + formatNumber(earn) + ' руб.</strong>'
-                      + '<br><span style="font-size:10px; color:#888;">' + percent + '% от ' + formatNumber(empTotalFact) + ' ₽</span></td>';
-                html += '</tr>';
+
+                html += '<div class="admin-card" style="border-left-color:' + colors.border + ';">';
+                html += '<div class="admin-card-cat" style="color:' + colors.text + ';">' + group.category + '</div>';
+                html += '<div class="admin-card-name">' + emp.fullname + dualBadge + '</div>';
+                html += '<div class="admin-card-val" style="color:' + colors.text + ';">' + formatNumber(earn) + ' ₽</div>';
+                html += '<div class="admin-card-pct">' + percent + '% от ' + formatNumber(empTotalFact) + ' ₽</div>';
+                html += '</div>';
             }
-            html += '</tbody></table>';
+
+            html += '</div>';
         }
     }
 
