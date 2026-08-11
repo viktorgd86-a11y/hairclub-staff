@@ -630,7 +630,6 @@
         <label>Месяц: <select id="monthSelect"></select></label>
         <label>Год: <input type="number" id="yearInput" value="2026" min="2026" style="width:80px" /></label>
         <button onclick="refreshData()" class="refresh-btn">🔄 Обновить</button>
-        <button id="dualRoleBtn" onclick="openDualRoleModal()" style="display:none;background:#b8823e;">👥 Двойная должность</button>
         <button onclick="logout()" class="logout-btn">Выйти</button>
     </div>
     </div>
@@ -673,6 +672,7 @@
         <div class="metrics-admin-block">
             <div class="metrics-admin-controls">
                 <button onclick="openHireModal()" class="refresh-btn">➕ Принять сотрудника</button>
+                <button id="dualRoleBtn" onclick="openDualRoleModal()" style="background:#b8823e;">👥 Двойная должность</button>
             </div>
             <div id="employeesListContent"></div>
         </div>
@@ -1399,7 +1399,6 @@ function doLogin() {
                 document.getElementById('loadingDiv').classList.add('hidden');
                 document.getElementById('appDiv').classList.remove('hidden');
                 document.getElementById('tabsBar').style.display = data.role === 'admin' ? 'flex' : 'none';
-                document.getElementById('dualRoleBtn').style.display = data.role === 'admin' ? '' : 'none';
                 document.getElementById('welcomeMsg').innerHTML = 'Привет, ' + data.fullname + '! 👋';
                 debugLog('Вход успешен, роль: ' + data.role);
                 refreshData();
