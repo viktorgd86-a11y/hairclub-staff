@@ -1466,13 +1466,17 @@ function refreshData() {
             ', сотрудники=' + employeesData.length);
 
         currentScheduleData = [];
+        var scheduleDedup = new Map();
         for (var i = 0; i < scheduleData.length; i++) {
             var s = scheduleData[i];
             var d = toYMD(s.date);
             if (d !== '') {
-                currentScheduleData.push({ date: d, empLogin: s.empLogin, isWork: s.isWork, percentOverride: s.percentOverride || 0, shiftComment: s.shiftComment || '', dayType: s.dayType || '' });
+                var entry = { date: d, empLogin: s.empLogin, isWork: s.isWork, percentOverride: s.percentOverride || 0, shiftComment: s.shiftComment || '', dayType: s.dayType || '' };
+                // Дедупликация: если на одну дату+сотрудника несколько строк — оставляем последнюю (самую свежую)
+                scheduleDedup.set(d + '|' + s.empLogin, entry);
             }
         }
+        currentScheduleData = Array.from(scheduleDedup.values());
 
         currentFinanceData = [];
         for (var i = 0; i < financeData.length; i++) {
@@ -1497,7 +1501,6 @@ function refreshData() {
         }
 
         percentHistory = percentHistoryData || [];
-        console.log('[DEBUG] Кристина schedule entries:', JSON.stringify(currentScheduleData.filter(function(s){return s.empLogin==='kristina_k' || (employeesMap.get(s.empLogin) && employeesMap.get(s.empLogin).fullname==='Кристина');})));
         categoryHistory = Array.isArray(categoryHistoryData) ? categoryHistoryData : [];
         dualRoles = Array.isArray(dualRolesData) ? dualRolesData : [];
         dailyMetrics = Array.isArray(dailyMetricsData) ? dailyMetricsData : [];
