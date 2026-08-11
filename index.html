@@ -1497,6 +1497,7 @@ function refreshData() {
         }
 
         percentHistory = percentHistoryData || [];
+        console.log('[DEBUG] Кристина schedule entries:', JSON.stringify(currentScheduleData.filter(function(s){return s.empLogin==='kristina_k' || (employeesMap.get(s.empLogin) && employeesMap.get(s.empLogin).fullname==='Кристина');})));
         categoryHistory = Array.isArray(categoryHistoryData) ? categoryHistoryData : [];
         dualRoles = Array.isArray(dualRolesData) ? dualRolesData : [];
         dailyMetrics = Array.isArray(dailyMetricsData) ? dailyMetricsData : [];
