@@ -189,7 +189,18 @@
         .emp-btn { border: none; border-radius: 7px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
         .emp-btn-edit { background: #6a90b0; color: #fff; }
         .emp-btn-fire { background: #c0574a; color: #fff; }
+        .emp-btn-absence { background: #b8823e; color: #fff; }
         .emp-btn-rehire { background: #6a9e8a; color: #fff; }
+        .absence-day-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+            margin-bottom: 14px;
+        }
+        .absence-day-cell {
+            aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid #dbe4ea; background: #f3f6f9; color: #555;
+        }
+        .absence-day-cell.vacation { background: #f2e6d3; color: #8a5a1e; border-color: #c9974f; }
+        .absence-day-cell.sick { background: #f2ded9; color: #a6483a; border-color: #d9a8a2; }
         /* ============================== */
 
         .work-cell-alt { background: #f2e6d3; cursor: pointer; border: 1px solid #c9974f; }
@@ -714,6 +725,23 @@
         <div class="modal-btns">
             <button class="modal-btn-cancel" onclick="closeFireModal()">Отмена</button>
             <button class="modal-btn-remove" onclick="submitFire()">Уволить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: БОЛЬНИЧНЫЙ/ОТПУСК ===== -->
+<div id="absenceModal" class="modal-overlay">
+    <div class="modal-box" style="width:400px;">
+        <div class="modal-title">🏖 Больничный / Отпуск</div>
+        <div style="font-size:12px;color:#888;margin-bottom:6px;" id="absenceEmpName"></div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:12px;">Клик по дню: пусто → 🏖 Отпуск → 🤒 Больничный → пусто</div>
+        <div class="absence-day-grid" id="absenceDayGrid"></div>
+        <div style="display:flex;gap:12px;font-size:11px;color:#888;margin-bottom:14px;">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#f2e6d3;border:1px solid #c9974f;border-radius:3px;vertical-align:middle;"></span> Отпуск</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#f2ded9;border:1px solid #d9a8a2;border-radius:3px;vertical-align:middle;"></span> Больничный</span>
+        </div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeAbsenceModal()">Закрыть</button>
         </div>
     </div>
 </div>
@@ -1519,7 +1547,7 @@ function renderAll() {
 
     var isMobile = window.innerWidth <= 700;
     var isEmployeeUser = currentUser.role === 'employee';
-    var noScheduleCategories = ['Управляющий', 'Ассистент', 'SMM'];
+    var noScheduleCategories = ['Управляющий', 'Ассистент', 'SMM', 'Менеджер'];
     var isNoSchedule = isEmployeeUser && noScheduleCategories.indexOf(currentUser.category) !== -1;
 
     if (isNoSchedule) {
@@ -1547,12 +1575,11 @@ function renderAll() {
 
     if (currentUser.role === 'employee') {
         // Категории без графика — % от общей выручки месяца
-        var noScheduleCategories = ['Управляющий', 'Ассистент', 'SMM'];
+        var noScheduleCategories = ['Управляющий', 'Ассистент', 'SMM', 'Менеджер'];
         var currentCategory = getCategoryForDate(currentUser.login, prefix + '-01');
 
         if (noScheduleCategories.indexOf(currentCategory) !== -1) {
-            var totalFactMonth = 0;
-            for (var date in financeMap) { totalFactMonth += (financeMap[date].fact || 0); }
+            var totalFactMonth = getFactExcludingAbsence(currentUser.login, financeMap);
             var lastDayOfMonth = year + '-' + String(month).padStart(2, '0') + '-' + String(new Date(year, month, 0).getDate()).padStart(2, '0');
             var empPercent = getPercentForDate(currentUser.login, lastDayOfMonth, employeesMap);
             var totalEarn = totalFactMonth * empPercent / 100;
@@ -1636,6 +1663,21 @@ function renderAll() {
 /* ============================================================
    ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: CSS-класс для категории
    ============================================================ */
+function getFactExcludingAbsence(login, financeMap) {
+    var total = 0;
+    for (var date in financeMap) {
+        var isAbsent = false;
+        for (var i = 0; i < currentScheduleData.length; i++) {
+            var s = currentScheduleData[i];
+            if (s.date === date && s.empLogin === login && s.dayType && (s.dayType === 'vacation' || s.dayType === 'sick')) {
+                isAbsent = true; break;
+            }
+        }
+        if (!isAbsent) total += (financeMap[date].fact || 0);
+    }
+    return total;
+}
+
 function getCategoryClass(category) {
     return CATEGORY_CLASSES[category] || '';
 }
@@ -1946,14 +1988,15 @@ function renderAdminTable(adminGroups, financeMap, dates) {
                 var empInfo = employeesMap.get(emp.login);
                 var lastDayOfMonth3 = Object.keys(financeMap).sort().pop() || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-28');
                 var percent = getPercentForDate(emp.login, lastDayOfMonth3, employeesMap);
-                var earn = totalFact * percent / 100;
+                var empTotalFact = getFactExcludingAbsence(emp.login, financeMap);
+                var earn = empTotalFact * percent / 100;
 
                 var isDual = !!getDualRole(emp.login);
             html += '<tr' + (isDual ? ' class="dual-row"' : '') + '>';
                 var dualBadge = isDual ? '<span class="dual-badge">2×</span>' : '';
             html += '<td style="text-align:left; font-weight:bold;">' + emp.fullname + dualBadge + '</td>';
                 html += '<td style="text-align:right;"><strong>' + formatNumber(earn) + ' руб.</strong>'
-                      + '<br><span style="font-size:10px; color:#888;">' + percent + '% от ' + formatNumber(totalFact) + ' ₽</span></td>';
+                      + '<br><span style="font-size:10px; color:#888;">' + percent + '% от ' + formatNumber(empTotalFact) + ' ₽</span></td>';
                 html += '</tr>';
             }
             html += '</tbody></table>';
@@ -2221,6 +2264,9 @@ function renderEmployeesTab() {
         html += '<div class="emp-list-actions">';
         if (!isFired) {
             html += '<button class="emp-btn emp-btn-edit" onclick="openEditEmpModal(\'' + emp.login + '\')">Изменить</button>';
+            if (['Ассистент', 'Менеджер'].indexOf(info.category) !== -1) {
+                html += '<button class="emp-btn emp-btn-absence" onclick="openAbsenceModal(\'' + emp.login + '\')">Б/О</button>';
+            }
             html += '<button class="emp-btn emp-btn-fire" onclick="openFireModal(\'' + emp.login + '\')">Уволить</button>';
         } else {
             html += '<button class="emp-btn emp-btn-rehire" onclick="rehireEmployeeAction(\'' + emp.login + '\')">Восстановить</button>';
@@ -2368,6 +2414,77 @@ function rehireEmployeeAction(login) {
             if (res.success) { showStatus('✓ Восстановлен'); refreshData(); }
             else { showStatus('Ошибка', true); }
         }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+/* ============================================================
+   БОЛЬНИЧНЫЙ / ОТПУСК ДЛЯ СОТРУДНИКОВ БЕЗ ГРАФИКА
+   ============================================================ */
+var absenceEmpLogin = null;
+
+function openAbsenceModal(login) {
+    absenceEmpLogin = login;
+    var info = employeesMap.get(login);
+    document.getElementById('absenceEmpName').textContent = (info ? info.fullname : login) + ' — ' + monthNameRu(getSelectedMonth()) + ' ' + getSelectedYear();
+    renderAbsenceGrid();
+    document.getElementById('absenceModal').classList.add('show');
+}
+function closeAbsenceModal() {
+    document.getElementById('absenceModal').classList.remove('show');
+    absenceEmpLogin = null;
+}
+
+function monthNameRu(m) {
+    var names = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+    return names[m-1];
+}
+
+function renderAbsenceGrid() {
+    if (!absenceEmpLogin) return;
+    var month = getSelectedMonth(), year = getSelectedYear();
+    var daysInMonth = new Date(year, month, 0).getDate();
+    var grid = document.getElementById('absenceDayGrid');
+    var html = '';
+    for (var d = 1; d <= daysInMonth; d++) {
+        var date = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        var dayType = '';
+        for (var i = 0; i < currentScheduleData.length; i++) {
+            var s = currentScheduleData[i];
+            if (s.date === date && s.empLogin === absenceEmpLogin) { dayType = s.dayType || ''; break; }
+        }
+        var cls = dayType === 'vacation' ? 'vacation' : dayType === 'sick' ? 'sick' : '';
+        var label = dayType === 'vacation' ? 'О' : dayType === 'sick' ? 'Б' : d;
+        html += '<div class="absence-day-cell ' + cls + '" data-date="' + date + '" onclick="toggleAbsenceDay(this)">' + label + '</div>';
+    }
+    grid.innerHTML = html;
+}
+
+function toggleAbsenceDay(cellEl) {
+    var date = cellEl.dataset.date;
+    var login = absenceEmpLogin;
+    if (!login) return;
+
+    var curEntry = null;
+    for (var i = 0; i < currentScheduleData.length; i++) {
+        if (currentScheduleData[i].date === date && currentScheduleData[i].empLogin === login) { curEntry = currentScheduleData[i]; break; }
+    }
+    var curDayType = curEntry ? (curEntry.dayType || '') : '';
+    var newDayType = curDayType === '' ? 'vacation' : curDayType === 'vacation' ? 'sick' : '';
+
+    if (curEntry) { curEntry.dayType = newDayType; curEntry.isWork = false; }
+    else currentScheduleData.push({ date: date, empLogin: login, isWork: false, percentOverride: 0, shiftComment: '', dayType: newDayType });
+
+    renderAbsenceGrid();
+
+    var url = SCRIPT_URL + '?action=updateSchedule&role=admin' +
+        '&date=' + encodeURIComponent(date) +
+        '&empLogin=' + encodeURIComponent(login) +
+        '&isWork=false&percentOverride=0&shiftComment=' +
+        '&dayType=' + encodeURIComponent(newDayType);
+
+    fetch(url, { redirect: 'follow' })
+        .then(function(r) { return r.json(); })
+        .then(function(res) { if (!res.success) showStatus('Ошибка сохранения', true); else showStatus('✓ Сохранено'); })
+        .catch(function() { showStatus('Ошибка сети', true); });
 }
 
 function switchMetricsTab(tab) {
