@@ -6,20 +6,25 @@
     <title>Учёт смен сотрудников</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f6f8fa; }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #fafafa; }
 
         .login-container {
             max-width: 350px; margin: 50px auto; padding: 25px; background: white;
             border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center;
         }
         .login-container h2 { margin-top: 0; margin-bottom: 20px; font-size: 24px; color: #333; }
+        .login-logo { max-width: 170px; margin: 0 auto 4px; display: block; }
+        .login-subtitle { font-size: 12px; color: #999; margin-bottom: 24px; }
+        .loader-anim { width: 90px; margin: 14px auto; display: block; }
+        .loading-status { font-size: 13px; color: #0ea5ff; font-weight: bold; animation: loadingBlink 1.6s ease-in-out infinite; }
+        @keyframes loadingBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
         .login-container label { display: block; text-align: left; margin-bottom: 5px; font-weight: bold; }
         .login-container input {
             width: 100%; padding: 10px; margin-bottom: 15px;
             border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
         }
         .login-container button {
-            background: #6a90b0; color: white; border: none;
+            background: #0ea5ff; color: white; border: none;
             padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
         }
 
@@ -69,15 +74,15 @@
         .manager-table thead tr:nth-child(2) th:first-child { z-index: 150; }
 
         /* Первая ячейка строк категорий наследует цвет от cat-* */
-        .cat-master td:first-child     { background: #d7e6ee !important; }
-        .cat-admin td:first-child      { background: #d9e8e0 !important; }
+        .cat-master td:first-child     { background: #e6f6ff !important; }
+        .cat-admin td:first-child      { background: #eeffd6 !important; }
         .cat-capsulator td:first-child { background: #e2e6ec !important; }
         .cat-cleaner td:first-child    { background: #f0e6cf !important; }
-        .cat-pomoga td:first-child     { background: #f0dde0 !important; }
+        .cat-pomoga td:first-child     { background: #fff0f3 !important; }
         .cat-manager td:first-child    { background: #c7dde2 !important; }
         .cat-upravlyayuschiy td:first-child { background: #f0ddc0 !important; }
         .cat-assistant td:first-child { background: #e6ebf0 !important; }
-        .cat-smm td:first-child       { background: #eddde2 !important; }
+        .cat-smm td:first-child       { background: #ffe4e6 !important; }
 
 
 
@@ -118,11 +123,11 @@
             border-radius: 6px; font-size: 13px;
         }
         .shift-popup-btns { display: flex; gap: 8px; justify-content: flex-end; }
-        .shift-btn-confirm { background: #6a9e8a; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .shift-btn-remove  { background: #c0574a; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-confirm { background: #7bc300; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .shift-btn-remove  { background: #ff3b6e; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .shift-btn-cancel  { background: #dbe4ea; color: #333; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .shift-comment-badge {
-            font-size: 8px; background: #3a5570; color: white;
+            font-size: 8px; background: #005c8a; color: white;
             border-radius: 3px; padding: 0 3px; margin-left: 2px;
         }
         /* ======================== */
@@ -173,7 +178,7 @@
         }
         .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
         .modal-btn-save { background: #b8823e; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-        .modal-btn-remove { background: #c0574a; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .modal-btn-remove { background: #ff3b6e; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .modal-btn-cancel { background: #dbe4ea; color: #333; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         /* ============================== */
         /* ===== СПИСОК СОТРУДНИКОВ ===== */
@@ -182,15 +187,15 @@
             padding: 10px 14px; background: #f3f6f9; border-radius: 10px;
             margin-bottom: 6px; flex-wrap: wrap;
         }
-        .emp-list-row.fired { opacity: 0.55; background: #f2ded9; }
-        .emp-list-name { font-weight: bold; font-size: 13px; color: #1e2e3a; min-width: 140px; }
+        .emp-list-row.fired { opacity: 0.55; background: #fff0f3; }
+        .emp-list-name { font-weight: bold; font-size: 13px; color: #1a1a1a; min-width: 140px; }
         .emp-list-meta { font-size: 11px; color: #888; }
         .emp-list-actions { margin-left: auto; display: flex; gap: 6px; }
         .emp-btn { border: none; border-radius: 7px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
-        .emp-btn-edit { background: #6a90b0; color: #fff; }
-        .emp-btn-fire { background: #c0574a; color: #fff; }
+        .emp-btn-edit { background: #0ea5ff; color: #fff; }
+        .emp-btn-fire { background: #ff3b6e; color: #fff; }
         .emp-btn-absence { background: #b8823e; color: #fff; }
-        .emp-btn-rehire { background: #6a9e8a; color: #fff; }
+        .emp-btn-rehire { background: #7bc300; color: #fff; }
         .absence-day-grid {
             display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
             margin-bottom: 14px;
@@ -200,7 +205,7 @@
             font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid #dbe4ea; background: #f3f6f9; color: #555;
         }
         .absence-day-cell.vacation { background: #f2e6d3; color: #8a5a1e; border-color: #c9974f; }
-        .absence-day-cell.sick { background: #f2ded9; color: #a6483a; border-color: #d9a8a2; }
+        .absence-day-cell.sick { background: #fff0f3; color: #a30030; border-color: #ffb3c1; }
         /* ============================== */
 
         .work-cell-alt { background: #f2e6d3; cursor: pointer; border: 1px solid #c9974f; }
@@ -210,13 +215,13 @@
             color: white; border-radius: 3px; padding: 0 3px; margin-left: 2px;
         }
         /* ============================== */
-        .work-cell { background: #6a90b0; color: #fff; cursor: pointer; }
-        .work-cell:hover { background: #587898; }
+        .work-cell { background: #0ea5ff; color: #fff; cursor: pointer; }
+        .work-cell:hover { background: #0884cc; }
         .vacation-cell { background: #f2e6d3; color: #8a5a1e; cursor: pointer; font-weight: bold; border: 1px solid #c9974f; }
         .vacation-cell:hover { background: #e8d5b8; }
-        .sick-cell { background: #f2ded9; color: #a6483a; cursor: pointer; font-weight: bold; border: 1px solid #d9a8a2; }
-        .sick-cell:hover { background: #e3b8ad; }
-        .weekend { background-color: #f3e2e2; }
+        .sick-cell { background: #fff0f3; color: #a30030; cursor: pointer; font-weight: bold; border: 1px solid #ffb3c1; }
+        .sick-cell:hover { background: #ffc9d4; }
+        .weekend { background-color: #ffe4e6; }
 
         .finance-input {
             width: 70px; padding: 2px; font-size: 11px; text-align: right;
@@ -226,7 +231,7 @@
             width: 70px; background: transparent; border: none;
             text-align: right; font-weight: bold; padding: 2px;
         }
-        .fact-input:focus { outline: 1px solid #6a90b0; background: white; }
+        .fact-input:focus { outline: 1px solid #0ea5ff; background: white; }
 
         .category-header { font-weight: bold; text-align: left; padding: 6px 8px; }
 
@@ -244,9 +249,9 @@
         }
         .day-chip {
             width: 44px; height: 44px; border-radius: 10px;
-            background: #dbe8e2; border: 2px solid #a9c9bd;
+            background: #eeffd6; border: 2px solid #a9c9bd;
             display: flex; align-items: center; justify-content: center;
-            font-size: 15px; font-weight: bold; color: #2f5c4c;
+            font-size: 15px; font-weight: bold; color: #3f6600;
         }
 
         /* ===== ЧИП С КОММЕНТАРИЕМ ===== */
@@ -254,20 +259,20 @@
             display: flex; flex-direction: column; align-items: center; gap: 3px;
         }
         .day-chip-comment {
-            font-size: 9px; font-weight: bold; color: #3a5570;
+            font-size: 9px; font-weight: bold; color: #005c8a;
             white-space: nowrap; max-width: 54px;
             overflow: hidden; text-overflow: ellipsis;
             text-align: center;
         }
         /* ================================ */
         .day-chip.weekend {
-            background: #eddde2; border-color: #d9a8a2; color: #7a3a4a;
+            background: #ffe4e6; border-color: #ffb3c1; color: #a30030;
         }
         .day-chip.day-chip-vacation {
             background: #f2e6d3; border-color: #c9974f; color: #8a5a1e;
         }
         .day-chip.day-chip-sick {
-            background: #f2ded9; border-color: #d9a8a2; color: #a6483a;
+            background: #fff0f3; border-color: #ffb3c1; color: #a30030;
         }
         .earn-summary {
             display: flex; gap: 12px; flex-wrap: wrap;
@@ -283,40 +288,40 @@
         .earn-card-value {
             font-size: 20px; font-weight: bold; color: #333; white-space: nowrap;
         }
-        .earn-card.accent { background: #dbe8e2; }
-        .earn-card.accent .earn-card-value { color: #2f5c4c; }
+        .earn-card.accent { background: #eeffd6; }
+        .earn-card.accent .earn-card-value { color: #3f6600; }
 
         /* ===== ЦВЕТА КАТЕГОРИЙ — фон всей строки ===== */
-        .cat-master td      { background: #d7e6ee !important; color: #1f4a63; font-weight: bold; }
-        .cat-admin td       { background: #d9e8e0 !important; color: #2c5c48; font-weight: bold; }
+        .cat-master td      { background: #e6f6ff !important; color: #0077b3; font-weight: bold; }
+        .cat-admin td       { background: #eeffd6 !important; color: #3f6600; font-weight: bold; }
         .cat-capsulator td  { background: #e2e6ec !important; color: #3d4c5c; font-weight: bold; }
         .cat-cleaner td     { background: #f0e6cf !important; color: #8a6a2e; font-weight: bold; }
-        .cat-pomoga td      { background: #f0dde0 !important; color: #8a4a54; font-weight: bold; }
+        .cat-pomoga td      { background: #fff0f3 !important; color: #a30030; font-weight: bold; }
         .cat-manager td     { background: #c7dde2 !important; color: #1f5258; font-weight: bold; }
         .cat-upravlyayuschiy td { background: #f0ddc0 !important; color: #8a5a1e; font-weight: bold; }
         .cat-assistant td { background: #e6ebf0 !important; color: #3d5468; font-weight: bold; }
-        .cat-smm td       { background: #eddde2 !important; color: #7a4a58; font-weight: bold; }
+        .cat-smm td       { background: #ffe4e6 !important; color: #a30030; font-weight: bold; }
         /* ============================================== */
 
 
-        .fact-cell-good { background-color: #dbe8e2; }
-        .fact-cell-bad { background-color: #e3b8ad; }
+        .fact-cell-good { background-color: #eeffd6; }
+        .fact-cell-bad { background-color: #ffc9d4; }
         .earn-per-day { display: block; font-size: 9px; color: #2c3e50; margin-top: 2px; }
 
         .earnings-block {
-            background: #dde8f0; padding: 15px; margin-top: 20px;
+            background: #e6f6ff; padding: 15px; margin-top: 20px;
             border-radius: 8px; font-weight: bold;
         }
 
         button {
-            margin: 5px; padding: 8px 16px; background: #6a90b0;
+            margin: 5px; padding: 8px 16px; background: #0ea5ff;
             color: white; border: none; border-radius: 6px; cursor: pointer;
         }
         .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-        .logout-btn { background: #c0574a; }
-        .refresh-btn { background: #6a90b0; }
-        .warning { color: #c0574a; font-size: 12px; margin-top: 5px; }
-        .welcome { margin-bottom: 12px; font-size: 20px; color: #1e2e3a; font-weight: bold; }
+        .logout-btn { background: #ff3b6e; }
+        .refresh-btn { background: #0ea5ff; }
+        .warning { color: #ff3b6e; font-size: 12px; margin-top: 5px; }
+        .welcome { margin-bottom: 12px; font-size: 20px; color: #1a1a1a; font-weight: bold; }
         .app-header { background: white; border-radius: 12px; padding: 18px 24px 14px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
         .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
         .toast {
@@ -330,9 +335,9 @@
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast-icon { font-size: 18px; }
         .toast-text { color: #333; }
-        .toast.success { border-left: 4px solid #6a9e8a; }
-        .toast.error   { border-left: 4px solid #c0574a; }
-        .toast.loading { border-left: 4px solid #6a90b0; }
+        .toast.success { border-left: 4px solid #7bc300; }
+        .toast.error   { border-left: 4px solid #ff3b6e; }
+        .toast.loading { border-left: 4px solid #0ea5ff; }
 
 
         /* ===== БЛОК ПОКАЗАТЕЛЕЙ ===== */
@@ -362,9 +367,9 @@
         .metrics-card-value {
             font-size: 20px; font-weight: bold; color: #333; white-space: nowrap;
         }
-        .metrics-card.good .metrics-card-value { color: #2f5c4c; }
+        .metrics-card.good .metrics-card-value { color: #3f6600; }
         .metrics-card.warn .metrics-card-value { color: #8a5a1e; }
-        .metrics-card.bad  .metrics-card-value { color: #a6483a; }
+        .metrics-card.bad  .metrics-card-value { color: #a30030; }
         .chart-wrap {
             width: 100%; overflow-x: auto; margin-top: 8px;
         }
@@ -381,7 +386,7 @@
             cursor: pointer; font-size: 13px; font-weight: bold;
             margin: 0; transition: background 0.2s;
         }
-        .tab-btn.active { background: white; color: #6a90b0; border-bottom: 2px solid white; }
+        .tab-btn.active { background: white; color: #0ea5ff; border-bottom: 2px solid white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -430,7 +435,7 @@
             border: 1px solid #ddd; border-radius: 6px;
             text-align: right;
         }
-        .metrics-field-input:focus { outline: 2px solid #6a90b0; border-color: #6a90b0; }
+        .metrics-field-input:focus { outline: 2px solid #0ea5ff; border-color: #0ea5ff; }
 
         .metrics-manager-section-label {
             font-size: 11px; font-weight: bold; color: #2f6d74;
@@ -439,7 +444,7 @@
         }
         .metrics-field-readonly {
             width: 90px; padding: 5px 8px; font-size: 13px;
-            background: #eaf1f6; border: 1px solid #c7d6e0;
+            background: #e6f6ff; border: 1px solid #b3e0ff;
             border-radius: 6px; text-align: right;
             font-weight: bold; color: #3d5468;
         }
@@ -456,18 +461,18 @@
             cursor: pointer; font-size: 13px; font-weight: bold;
             margin: 0; transition: background 0.2s;
         }
-        .metrics-sub-btn.active { background: #6a90b0; color: white; }
+        .metrics-sub-btn.active { background: #0ea5ff; color: white; }
 
         /* ===== ЦВЕТА КАТЕГОРИЙ В ПОКАЗАТЕЛЯХ ===== */
-        .metrics-cat-master   { background: #eaf1f6; border-left: 4px solid #6a90b0; }
-        .metrics-cat-admin    { background: #e6f0ec; border-left: 4px solid #4a8a72; }
+        .metrics-cat-master   { background: #e6f6ff; border-left: 4px solid #0ea5ff; }
+        .metrics-cat-admin    { background: #eeffd6; border-left: 4px solid #6aab00; }
         .metrics-cat-manager  { background: #e2eef0; border-left: 4px solid #2f6d74; }
         .metrics-cat-label {
             font-size: 12px; font-weight: bold; padding: 6px 12px;
             border-radius: 6px; margin: 12px 0 6px;
         }
-        .metrics-cat-label.master  { background: #d7e6ee; color: #1f4a63; }
-        .metrics-cat-label.admin   { background: #d9e8e0; color: #2c5c48; }
+        .metrics-cat-label.master  { background: #e6f6ff; color: #0077b3; }
+        .metrics-cat-label.admin   { background: #eeffd6; color: #3f6600; }
         .metrics-cat-label.manager { background: #c7dde2; color: #1f5258; }
         /* ========================================= */
 
@@ -578,13 +583,21 @@
 
 <!-- ===== ФОРМА ВХОДА ===== -->
 <div id="loginDiv" class="login-container">
-    <h2>Вход в систему</h2>
+    <img src="logo.png" class="login-logo" alt="Hair Club">
+    <div class="login-subtitle">Учёт смен сотрудников</div>
     <label>Логин:</label>
     <input type="text" id="loginInput" autocomplete="username" />
     <label>Пароль:</label>
     <input type="password" id="passInput" autocomplete="current-password" />
     <button onclick="doLogin()">Войти</button>
     <div id="loginError" class="warning"></div>
+</div>
+
+<!-- ===== ЭКРАН ЗАГРУЗКИ ===== -->
+<div id="loadingDiv" class="login-container hidden">
+    <img src="logo.png" class="login-logo" alt="Hair Club">
+    <img src="hair_loader.webp" class="loader-anim" alt="">
+    <div class="loading-status">Наращиваем график...</div>
 </div>
 
 <!-- ===== ОСНОВНОЕ ПРИЛОЖЕНИЕ ===== -->
@@ -662,7 +675,7 @@
         </div>
         <div class="shift-popup-btns" style="margin-bottom:8px;">
             <button class="shift-btn-cancel" style="background:#f2e6d3;color:#8a5a1e;" onclick="confirmShiftAbsence('vacation')">🏖 Отпуск</button>
-            <button class="shift-btn-cancel" style="background:#f2ded9;color:#a6483a;" onclick="confirmShiftAbsence('sick')">🤒 Больничный</button>
+            <button class="shift-btn-cancel" style="background:#fff0f3;color:#a30030;" onclick="confirmShiftAbsence('sick')">🤒 Больничный</button>
         </div>
         <div class="shift-popup-btns">
             <button class="shift-btn-cancel" onclick="closeShiftPopup()">Отмена</button>
@@ -744,7 +757,7 @@
         <div class="absence-day-grid" id="absenceDayGrid"></div>
         <div style="display:flex;gap:12px;font-size:11px;color:#888;margin-bottom:14px;">
             <span><span style="display:inline-block;width:10px;height:10px;background:#f2e6d3;border:1px solid #c9974f;border-radius:3px;vertical-align:middle;"></span> Отпуск</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:#f2ded9;border:1px solid #d9a8a2;border-radius:3px;vertical-align:middle;"></span> Больничный</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#fff0f3;border:1px solid #ffb3c1;border-radius:3px;vertical-align:middle;"></span> Больничный</span>
         </div>
         <div class="modal-btns">
             <button class="modal-btn-cancel" onclick="closeAbsenceModal()">Закрыть</button>
@@ -1318,7 +1331,8 @@ function doLogin() {
 
     document.getElementById('loginError').innerText = '';
     debugLog('Попытка входа: ' + login);
-    showStatus('Входим...');
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('loadingDiv').classList.remove('hidden');
 
     var url = SCRIPT_URL +
         '?action=auth' +
@@ -1341,9 +1355,10 @@ function doLogin() {
                 data = JSON.parse(text);
             } catch(e) {
                 debugLog('ОШИБКА: ответ не JSON! Возможно скрипт не развёрнут.');
+                document.getElementById('loadingDiv').classList.add('hidden');
+                document.getElementById('loginDiv').classList.remove('hidden');
                 document.getElementById('loginError').innerText =
                     'Сервер вернул не JSON. Проверьте URL скрипта и деплой.';
-                showStatus('Ошибка: не JSON ответ', true);
                 return;
             }
 
@@ -1359,7 +1374,7 @@ function doLogin() {
                     tech_percent: data.tech_percent || 0,
                     birthdate: data.birthdate || ''
                 };
-                document.getElementById('loginDiv').classList.add('hidden');
+                document.getElementById('loadingDiv').classList.add('hidden');
                 document.getElementById('appDiv').classList.remove('hidden');
                 document.getElementById('tabsBar').style.display = data.role === 'admin' ? 'flex' : 'none';
                 document.getElementById('dualRoleBtn').style.display = data.role === 'admin' ? '' : 'none';
@@ -1367,16 +1382,18 @@ function doLogin() {
                 debugLog('Вход успешен, роль: ' + data.role);
                 refreshData();
             } else {
+                document.getElementById('loadingDiv').classList.add('hidden');
+                document.getElementById('loginDiv').classList.remove('hidden');
                 document.getElementById('loginError').innerText = data.error || 'Ошибка входа';
                 debugLog('Вход не удался: ' + (data.error || 'неизвестная ошибка'));
-                showStatus('Ошибка входа', true);
             }
         })
         .catch(function(e) {
             debugLog('ОШИБКА СЕТИ: ' + e.message);
+            document.getElementById('loadingDiv').classList.add('hidden');
+            document.getElementById('loginDiv').classList.remove('hidden');
             document.getElementById('loginError').innerText =
                 'Ошибка соединения: ' + e.message;
-            showStatus('Ошибка соединения', true);
         });
 }
 
@@ -1741,7 +1758,7 @@ function renderMainTable(groups, dates, financeMap) {
     // Строка 1: номера дней
     html += '<tr><th>Сотрудник / День</th>';
     for (var i = 0; i < dates.length; i++) {
-        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : '';
+        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#fff0f3;"' : '';
         html += '<th' + wkStyle + '>' + (i + 1) + '</th>';
     }
     html += '<th>Итого</th>';
@@ -1751,7 +1768,7 @@ function renderMainTable(groups, dates, financeMap) {
     // Строка 2: дни недели
     html += '<tr><th style="background:#f3f6f9;">день недели</th>';
     for (var i = 0; i < dates.length; i++) {
-        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : ' style="background:#f3f6f9;"';
+        var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#fff0f3;"' : ' style="background:#f3f6f9;"';
         html += '<th' + wkStyle + '>' + dayOfWeekShort(dates[i]) + '</th>';
     }
     html += '<th></th>';
@@ -1945,7 +1962,7 @@ function renderAdminTable(adminGroups, financeMap, dates) {
             // Строка 1: номера дней
             html += '<tr><th style="text-align:left;">' + group.category + '</th>';
             for (var i = 0; i < dates.length; i++) {
-                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : '';
+                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#fff0f3;"' : '';
                 html += '<th' + wkStyle + '>' + (i + 1) + '</th>';
             }
             html += '<th>Дней</th><th>Заработок</th></tr>';
@@ -1953,7 +1970,7 @@ function renderAdminTable(adminGroups, financeMap, dates) {
             // Строка 2: дни недели
             html += '<tr><th style="background:#f3f6f9;"></th>';
             for (var i = 0; i < dates.length; i++) {
-                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#f2ded9;"' : ' style="background:#f3f6f9;"';
+                var wkStyle = isWeekendDate(dates[i]) ? ' style="background:#fff0f3;"' : ' style="background:#f3f6f9;"';
                 html += '<th' + wkStyle + '>' + dayOfWeekShort(dates[i]) + '</th>';
             }
             html += '<th></th><th></th></tr>';
@@ -2202,7 +2219,7 @@ function renderMobileEmployeeSchedule(dates, financeMap) {
     html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">';
     for (var d = 0; d < 7; d++) {
         var isWknd = d >= 5;
-        html += '<div style="text-align:center;font-size:10px;font-weight:bold;color:' + (isWknd ? '#b98276' : '#888') + ';">' + dayLabels[d] + '</div>';
+        html += '<div style="text-align:center;font-size:10px;font-weight:bold;color:' + (isWknd ? '#e85d7a' : '#888') + ';">' + dayLabels[d] + '</div>';
     }
     html += '</div>';
 
@@ -2230,13 +2247,13 @@ function renderMobileEmployeeSchedule(dates, financeMap) {
 
             var bg, color, border;
             if (isWork) {
-                bg = isWknd ? '#eddde2' : '#dbe8e2';
-                color = isWknd ? '#7a3a4a' : '#2f5c4c';
-                border = isWknd ? '2px solid #d9a8a2' : '2px solid #a9c9bd';
+                bg = isWknd ? '#ffe4e6' : '#eeffd6';
+                color = isWknd ? '#a30030' : '#3f6600';
+                border = isWknd ? '2px solid #ffb3c1' : '2px solid #a9c9bd';
             } else {
-                bg = isWknd ? '#f7ece9' : '#f3f6f9';
-                color = isWknd ? '#b98276' : '#bbb';
-                border = '1px solid ' + (isWknd ? '#e3b8ad' : '#eee');
+                bg = isWknd ? '#fff0f3' : '#f3f6f9';
+                color = isWknd ? '#e85d7a' : '#bbb';
+                border = '1px solid ' + (isWknd ? '#ffc9d4' : '#eee');
             }
 
             html += '<div style="text-align:center;padding:6px 2px;border-radius:8px;' +
@@ -2282,6 +2299,7 @@ function renderEmployeesTab() {
     for (var entry of employeesMap.entries()) {
         var login = entry[0];
         var info = entry[1];
+        if (login === 'vikkrest') continue; // владельца системы не показываем и не даём редактировать/увольнять
         list.push({ login: login, info: info });
     }
     list.sort(function(a, b) {
@@ -2297,7 +2315,7 @@ function renderEmployeesTab() {
         html += '<div class="emp-list-row' + (isFired ? ' fired' : '') + '">';
         html += '<span class="emp-list-name">' + (info.fullname || emp.login) + '</span>';
         html += '<span class="emp-list-meta">' + (info.category || '—') + ' · ' + (info.percent || 0) + '%</span>';
-        if (isFired) html += '<span class="emp-list-meta" style="color:#c0574a;">уволен ' + formatDisplayDate(info.date_fired) + '</span>';
+        if (isFired) html += '<span class="emp-list-meta" style="color:#ff3b6e;">уволен ' + formatDisplayDate(info.date_fired) + '</span>';
         html += '<div class="emp-list-actions">';
         if (!isFired) {
             html += '<button class="emp-btn emp-btn-edit" onclick="openEditEmpModal(\'' + emp.login + '\')">Изменить</button>';
@@ -2890,7 +2908,7 @@ function renderMetrics() {
     // ---- БЛОК KPI АДМИНИСТРАТОРА ----
     if (myAdminMonthly && (category === 'Администратор' || isDual)) {
         hasAnyData = true;
-        if (isDual) html += '<div class="metrics-section-label" style="color:#6a90b0;">🗂 За администратора</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#0ea5ff;">🗂 За администратора</div>';
         else        html += '<div class="metrics-section-label">За месяц</div>';
         html += '<div class="metrics-cards">';
         var reviews  = parseInt(myAdminMonthly.reviews)||0;
@@ -2937,9 +2955,9 @@ function renderMetrics() {
 /* Карточка с акцентным цветом */
 function mCard(accent, label, value, icon) {
     var bg = '';
-    if (accent === 'accent-green')  bg = 'background:#dbe8e2;';
+    if (accent === 'accent-green')  bg = 'background:#eeffd6;';
     if (accent === 'accent-purple') bg = 'background:#f7ecd9;';
-    if (accent === 'accent-blue')   bg = 'background:#dde8f0;';
+    if (accent === 'accent-blue')   bg = 'background:#e6f6ff;';
     return '<div class="metrics-card" style="' + bg + '">' +
         '<div class="metrics-card-label">' + (icon ? icon + ' ' : '') + label + '</div>' +
         '<div class="metrics-card-value">' + value + '</div>' +
@@ -2948,8 +2966,8 @@ function mCard(accent, label, value, icon) {
 
 /* KPI-карточка с иконкой статуса и цветом значения */
 function mKpiCard(label, value, icon, color, suffix) {
-    var valColor = color==='green'?'#2f5c4c':color==='orange'?'#8a5a1e':'#a6483a';
-    var bg = color==='green'?'background:#dbe8e2;':color==='orange'?'background:#f2e6d3;':'background:#f2ded9;';
+    var valColor = color==='green'?'#3f6600':color==='orange'?'#8a5a1e':'#a30030';
+    var bg = color==='green'?'background:#eeffd6;':color==='orange'?'background:#f2e6d3;':'background:#fff0f3;';
     return '<div class="metrics-card" style="' + bg + '">' +
         '<div class="metrics-card-label">' + label + '</div>' +
         '<div style="display:flex;align-items:center;gap:6px;">' +
@@ -2977,7 +2995,7 @@ function buildManagerChart(sections) {
     if (maxVal === 0) return '';
 
     var barW = 20, gap = 5, groupGap = 28;
-    var colors = ['#6a90b0','#6a9e8a','#b8823e'];
+    var colors = ['#0ea5ff','#7bc300','#b8823e'];
     var keys = ['new','old','total'];
     var keyLabels = ['Новые','Старые','Общие'];
 
@@ -3040,8 +3058,8 @@ function buildMetricsChart(data) {
         // Столбик доп.продаж
         var salesH = (sales / maxVal) * chartH;
         var salesY = padT + chartH - salesH;
-        bars += '<rect x="'+gx+'" y="'+salesY+'" width="'+barW+'" height="'+salesH+'" fill="#6a9e8a" rx="3" opacity="0.85"/>';
-        if (sales > 0) bars += '<text x="'+(gx+barW/2)+'" y="'+(salesY-3)+'" text-anchor="middle" font-size="8" fill="#2f5c4c">'+formatNumber(sales)+'</text>';
+        bars += '<rect x="'+gx+'" y="'+salesY+'" width="'+barW+'" height="'+salesH+'" fill="#7bc300" rx="3" opacity="0.85"/>';
+        if (sales > 0) bars += '<text x="'+(gx+barW/2)+'" y="'+(salesY-3)+'" text-anchor="middle" font-size="8" fill="#3f6600">'+formatNumber(sales)+'</text>';
 
         // Столбик косметики
         var cosmH = (cosm / maxVal) * chartH;
@@ -3054,8 +3072,8 @@ function buildMetricsChart(data) {
         var hairH = (hair / maxVal) * chartH;
         var hairY = padT + chartH - hairH;
         var cx3 = gx+2*(barW+gap);
-        bars += '<rect x="'+cx3+'" y="'+hairY+'" width="'+barW+'" height="'+hairH+'" fill="#6a90b0" rx="3" opacity="0.85"/>';
-        if (hair > 0) bars += '<text x="'+(cx3+barW/2)+'" y="'+(hairY-3)+'" text-anchor="middle" font-size="8" fill="#3a5570">'+formatNumber(hair)+'</text>';
+        bars += '<rect x="'+cx3+'" y="'+hairY+'" width="'+barW+'" height="'+hairH+'" fill="#0ea5ff" rx="3" opacity="0.85"/>';
+        if (hair > 0) bars += '<text x="'+(cx3+barW/2)+'" y="'+(hairY-3)+'" text-anchor="middle" font-size="8" fill="#005c8a">'+formatNumber(hair)+'</text>';
 
         // Подпись дня
         labels += '<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" font-weight="bold" fill="#555">'+dayNum+'</text>';
@@ -3063,11 +3081,11 @@ function buildMetricsChart(data) {
 
     // Легенда
     var legend =
-        '<rect x="'+padL+'" y="6" width="9" height="9" fill="#6a9e8a" rx="2"/>' +
+        '<rect x="'+padL+'" y="6" width="9" height="9" fill="#7bc300" rx="2"/>' +
         '<text x="'+(padL+12)+'" y="14" font-size="9" fill="#555">Доп. продажи</text>' +
         '<rect x="'+(padL+90)+'" y="6" width="9" height="9" fill="#b8823e" rx="2"/>' +
         '<text x="'+(padL+102)+'" y="14" font-size="9" fill="#555">Косметика</text>' +
-        '<rect x="'+(padL+170)+'" y="6" width="9" height="9" fill="#6a90b0" rx="2"/>' +
+        '<rect x="'+(padL+170)+'" y="6" width="9" height="9" fill="#0ea5ff" rx="2"/>' +
         '<text x="'+(padL+182)+'" y="14" font-size="9" fill="#555">Продажа волос</text>';
 
     // Горизонтальная линия основания
