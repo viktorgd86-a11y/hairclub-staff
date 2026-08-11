@@ -201,6 +201,10 @@
         /* ============================== */
         .work-cell { background: #6a90b0; color: #fff; cursor: pointer; }
         .work-cell:hover { background: #587898; }
+        .vacation-cell { background: #f2e6d3; color: #8a5a1e; cursor: pointer; font-weight: bold; border: 1px solid #c9974f; }
+        .vacation-cell:hover { background: #e8d5b8; }
+        .sick-cell { background: #f2ded9; color: #a6483a; cursor: pointer; font-weight: bold; border: 1px solid #d9a8a2; }
+        .sick-cell:hover { background: #e3b8ad; }
         .weekend { background-color: #f3e2e2; }
 
         .finance-input {
@@ -639,6 +643,10 @@
             <div class="shift-comment-label">Комментарий (необязательно)</div>
             <input class="shift-comment-input" id="shiftCommentInput" type="text" placeholder="Например: за администратора">
         </div>
+        <div class="shift-popup-btns" style="margin-bottom:8px;">
+            <button class="shift-btn-cancel" style="background:#f2e6d3;color:#8a5a1e;" onclick="confirmShiftAbsence('vacation')">🏖 Отпуск</button>
+            <button class="shift-btn-cancel" style="background:#f2ded9;color:#a6483a;" onclick="confirmShiftAbsence('sick')">🤒 Больничный</button>
+        </div>
         <div class="shift-popup-btns">
             <button class="shift-btn-cancel" onclick="closeShiftPopup()">Отмена</button>
             <button class="shift-btn-remove" id="shiftRemoveBtn" style="display:none;" onclick="confirmShiftRemove()">Снять смену</button>
@@ -1009,27 +1017,34 @@ function confirmShiftPopup() {
     // Определяем override: если выбран percent1 — override = percent1 (чтобы отличать от "обычной" смены)
     var override = pct;
 
-    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, true, override, comment);
+    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, true, override, comment, '');
     closeShiftPopup();
 }
 
 function confirmShiftRemove() {
     if (!shiftPopupData) return;
-    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, false, 0, '');
+    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, false, 0, '', '');
     closeShiftPopup();
 }
 
-function saveShiftWithOverride(empLogin, date, isWork, percentOverride, shiftComment) {
+function confirmShiftAbsence(type) {
+    if (!shiftPopupData) return;
+    saveShiftWithOverride(shiftPopupData.empLogin, shiftPopupData.date, false, 0, '', type);
+    closeShiftPopup();
+}
+
+function saveShiftWithOverride(empLogin, date, isWork, percentOverride, shiftComment, dayType) {
+    dayType = dayType || '';
     // Обновляем локально
     var found = false;
     for (var i = 0; i < currentScheduleData.length; i++) {
         var s = currentScheduleData[i];
         if (s.date === date && s.empLogin === empLogin) {
-            s.isWork = isWork; s.percentOverride = percentOverride; s.shiftComment = shiftComment;
+            s.isWork = isWork; s.percentOverride = percentOverride; s.shiftComment = shiftComment; s.dayType = dayType;
             found = true; break;
         }
     }
-    if (!found) currentScheduleData.push({ date: date, empLogin: empLogin, isWork: isWork, percentOverride: percentOverride, shiftComment: shiftComment });
+    if (!found) currentScheduleData.push({ date: date, empLogin: empLogin, isWork: isWork, percentOverride: percentOverride, shiftComment: shiftComment, dayType: dayType });
 
     renderAll();
 
@@ -1038,7 +1053,8 @@ function saveShiftWithOverride(empLogin, date, isWork, percentOverride, shiftCom
         '&empLogin=' + encodeURIComponent(empLogin) +
         '&isWork=' + isWork +
         '&percentOverride=' + (percentOverride || 0) +
-        '&shiftComment=' + encodeURIComponent(shiftComment);
+        '&shiftComment=' + encodeURIComponent(shiftComment) +
+        '&dayType=' + encodeURIComponent(dayType);
 
     fetch(url, { redirect: 'follow' })
         .then(function(r) { return r.json(); })
@@ -1382,7 +1398,7 @@ function refreshData() {
             var s = scheduleData[i];
             var d = toYMD(s.date);
             if (d !== '') {
-                currentScheduleData.push({ date: d, empLogin: s.empLogin, isWork: s.isWork, percentOverride: s.percentOverride || 0, shiftComment: s.shiftComment || '' });
+                currentScheduleData.push({ date: d, empLogin: s.empLogin, isWork: s.isWork, percentOverride: s.percentOverride || 0, shiftComment: s.shiftComment || '', dayType: s.dayType || '' });
             }
         }
 
@@ -1735,6 +1751,13 @@ function renderMainTable(groups, dates, financeMap) {
                 var wkClass = isWeekendDate(date) ? ' weekend' : '';
                 var cellContent = '';
 
+                // Ищем тип дня (отпуск/больничный) для этой ячейки
+                var cellDayType = '';
+                for (var dti = 0; dti < currentScheduleData.length; dti++) {
+                    var dtd = currentScheduleData[dti];
+                    if (dtd.date === date && dtd.empLogin === emp.login) { cellDayType = dtd.dayType || ''; break; }
+                }
+
                 if (isWork && isAdmin) {
                     var fact = (financeMap[date] && financeMap[date].fact) || 0;
                     var corrPercent = getCorrectedPercent(emp.login, date, currentScheduleData, employeesMap);
@@ -1754,6 +1777,10 @@ function renderMainTable(groups, dates, financeMap) {
                         '</div>';
                 } else if (isWork) {
                     cellContent = 'С';
+                } else if (cellDayType === 'vacation') {
+                    cellContent = 'О';
+                } else if (cellDayType === 'sick') {
+                    cellContent = 'Б';
                 }
 
                 if (isAdmin) {
@@ -1765,7 +1792,9 @@ function renderMainTable(groups, dates, financeMap) {
                             cellOverride = osd.percentOverride; break;
                         }
                     }
-                    var cellClass = isWork ? (cellOverride > 0 ? 'work-cell-alt' : 'work-cell') : '';
+                    var cellClass = isWork ? (cellOverride > 0 ? 'work-cell-alt' : 'work-cell')
+                        : cellDayType === 'vacation' ? 'vacation-cell'
+                        : cellDayType === 'sick' ? 'sick-cell' : '';
                     html += '<td class="' + cellClass + wkClass + '"' +
                         ' data-emplogin="' + emp.login + '"' +
                         ' data-date="' + date + '"' +
@@ -1773,7 +1802,8 @@ function renderMainTable(groups, dates, financeMap) {
                         ' onclick="toggleWorkday(this)">' +
                         cellContent + '</td>';
                 } else {
-                    html += '<td class="' + (isWork ? 'work-cell' : '') + wkClass + '">' +
+                    var cellClassRO = isWork ? 'work-cell' : cellDayType === 'vacation' ? 'vacation-cell' : cellDayType === 'sick' ? 'sick-cell' : '';
+                    html += '<td class="' + cellClassRO + wkClass + '">' +
                         cellContent + '</td>';
                 }
             }
@@ -1961,14 +1991,25 @@ function toggleWorkday(cellElement) {
         return;
     }
 
-    // Обычный toggle для всех остальных
+    // Обычный цикл для всех остальных: пусто -> С -> О (отпуск) -> Б (больничный) -> пусто
     var curIsWork = curEntry && (curEntry.isWork === true || curEntry.isWork === 1);
-    var newIsWork = !curIsWork;
+    var curDayType = curEntry ? (curEntry.dayType || '') : '';
+
+    var newIsWork, newDayType;
+    if (!curIsWork && !curDayType) {
+        newIsWork = true; newDayType = '';
+    } else if (curIsWork) {
+        newIsWork = false; newDayType = 'vacation';
+    } else if (curDayType === 'vacation') {
+        newIsWork = false; newDayType = 'sick';
+    } else {
+        newIsWork = false; newDayType = '';
+    }
 
     if (curEntry) {
-        curEntry.isWork = newIsWork; curEntry.percentOverride = 0; curEntry.shiftComment = '';
+        curEntry.isWork = newIsWork; curEntry.percentOverride = 0; curEntry.shiftComment = ''; curEntry.dayType = newDayType;
     } else {
-        currentScheduleData.push({ date: date, empLogin: empLogin, isWork: newIsWork, percentOverride: 0, shiftComment: '' });
+        currentScheduleData.push({ date: date, empLogin: empLogin, isWork: newIsWork, percentOverride: 0, shiftComment: '', dayType: newDayType });
     }
 
     renderAll();
@@ -1977,20 +2018,20 @@ function toggleWorkday(cellElement) {
         '&date=' + encodeURIComponent(date) +
         '&empLogin=' + encodeURIComponent(empLogin) +
         '&isWork=' + newIsWork +
-        '&percentOverride=0&shiftComment=';
+        '&percentOverride=0&shiftComment=&dayType=' + encodeURIComponent(newDayType);
 
     fetch(url, { redirect: 'follow' })
         .then(function(r) { return r.json(); })
         .then(function(res) {
             if (!res.success) {
                 showStatus('Ошибка сохранения', true);
-                if (curEntry) curEntry.isWork = curIsWork;
+                if (curEntry) { curEntry.isWork = curIsWork; curEntry.dayType = curDayType; }
                 renderAll();
             } else { showStatus('✓ Сохранено'); }
         })
         .catch(function() {
             showStatus('Ошибка сохранения', true);
-            if (curEntry) curEntry.isWork = curIsWork;
+            if (curEntry) { curEntry.isWork = curIsWork; curEntry.dayType = curDayType; }
             renderAll();
         });
 }
