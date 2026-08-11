@@ -176,7 +176,22 @@
         .modal-btn-remove { background: #c0574a; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .modal-btn-cancel { background: #dbe4ea; color: #333; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         /* ============================== */
-        /* ===== ПЕРЕХОДНЫЕ СМЕНЫ ===== */
+        /* ===== СПИСОК СОТРУДНИКОВ ===== */
+        .emp-list-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; background: #f3f6f9; border-radius: 10px;
+            margin-bottom: 6px; flex-wrap: wrap;
+        }
+        .emp-list-row.fired { opacity: 0.55; background: #f2ded9; }
+        .emp-list-name { font-weight: bold; font-size: 13px; color: #1e2e3a; min-width: 140px; }
+        .emp-list-meta { font-size: 11px; color: #888; }
+        .emp-list-actions { margin-left: auto; display: flex; gap: 6px; }
+        .emp-btn { border: none; border-radius: 7px; padding: 5px 11px; font-size: 11px; cursor: pointer; }
+        .emp-btn-edit { background: #6a90b0; color: #fff; }
+        .emp-btn-fire { background: #c0574a; color: #fff; }
+        .emp-btn-rehire { background: #6a9e8a; color: #fff; }
+        /* ============================== */
+
         .work-cell-alt { background: #f2e6d3; cursor: pointer; border: 1px solid #c9974f; }
         .work-cell-alt:hover { background: #e8d5b8; }
         .transition-badge {
@@ -568,6 +583,7 @@
     <div id="tabsBar" style="display:none;" class="tabs">
         <button class="tab-btn active" onclick="switchTab('schedule')">📅 График</button>
         <button class="tab-btn" onclick="switchTab('metrics')">📊 Показатели</button>
+        <button class="tab-btn" onclick="switchTab('employees')">👤 Сотрудники</button>
     </div>
 
     <!-- Вкладка: График -->
@@ -596,6 +612,16 @@
         </div>
     </div>
 
+    <!-- Вкладка: Сотрудники (только admin) -->
+    <div id="tabEmployees" class="tab-content">
+        <div class="metrics-admin-block">
+            <div class="metrics-admin-controls">
+                <button onclick="openHireModal()" class="refresh-btn">➕ Принять сотрудника</button>
+            </div>
+            <div id="employeesListContent"></div>
+        </div>
+    </div>
+
     <div id="earningsDiv" class="earnings-block"></div>
     <div id="metricsDiv"></div>
     <div id="numerologyDiv"></div>
@@ -617,6 +643,69 @@
             <button class="shift-btn-cancel" onclick="closeShiftPopup()">Отмена</button>
             <button class="shift-btn-remove" id="shiftRemoveBtn" style="display:none;" onclick="confirmShiftRemove()">Снять смену</button>
             <button class="shift-btn-confirm" onclick="confirmShiftPopup()">✓ Поставить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: ПРИЁМ СОТРУДНИКА ===== -->
+<div id="hireModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title">➕ Принять сотрудника</div>
+        <div class="modal-fields">
+            <div class="modal-field-row"><span class="modal-field-label">Логин</span><input class="modal-field-input" id="hireLogin" type="text" placeholder="ivan"></div>
+            <div class="modal-field-row"><span class="modal-field-label">Пароль</span><input class="modal-field-input" id="hirePass" type="text" placeholder="пароль"></div>
+            <div class="modal-field-row"><span class="modal-field-label">ФИО</span><input class="modal-field-input" id="hireFullname" type="text" placeholder="Иван Иванов"></div>
+            <div class="modal-field-row"><span class="modal-field-label">Роль</span>
+                <select class="modal-field-input" id="hireRole">
+                    <option value="employee">Сотрудник</option>
+                    <option value="admin">Администратор системы</option>
+                </select>
+            </div>
+            <div class="modal-field-row"><span class="modal-field-label">Категория</span>
+                <select class="modal-field-input" id="hireCategory"></select>
+            </div>
+            <div class="modal-field-row"><span class="modal-field-label">Процент</span><input class="modal-field-input" id="hirePercent" type="number" step="0.1" placeholder="2.7"></div>
+            <div class="modal-field-row"><span class="modal-field-label">С даты</span><input class="modal-field-input" id="hireDateFrom" type="date"></div>
+        </div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeHireModal()">Отмена</button>
+            <button class="modal-btn-save" onclick="submitHire()">Принять</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: ИЗМЕНИТЬ ДОЛЖНОСТЬ/ПРОЦЕНТ ===== -->
+<div id="editEmpModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title">✏️ Изменить сотрудника</div>
+        <div style="font-size:12px;color:#888;margin-bottom:12px;" id="editEmpName"></div>
+        <div class="modal-fields">
+            <div class="modal-field-row"><span class="modal-field-label">Категория</span>
+                <select class="modal-field-input" id="editCategory"></select>
+            </div>
+            <div class="modal-field-row"><span class="modal-field-label">Процент</span><input class="modal-field-input" id="editPercent" type="number" step="0.1" placeholder="оставить как есть"></div>
+            <div class="modal-field-row"><span class="modal-field-label">С даты</span><input class="modal-field-input" id="editDateFrom" type="date"></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:12px;">Изменения применятся начиная с указанной даты, прошлые расчёты не затронут.</div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeEditEmpModal()">Отмена</button>
+            <button class="modal-btn-save" onclick="submitEditEmp()">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: УВОЛЬНЕНИЕ ===== -->
+<div id="fireModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title">🚪 Уволить сотрудника</div>
+        <div style="font-size:12px;color:#888;margin-bottom:12px;" id="fireEmpName"></div>
+        <div class="modal-fields">
+            <div class="modal-field-row"><span class="modal-field-label">Дата</span><input class="modal-field-input" id="fireDateInput" type="date"></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:12px;">Текущий месяц отобразится полностью, со следующего сотрудник пропадёт из графика.</div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeFireModal()">Отмена</button>
+            <button class="modal-btn-remove" onclick="submitFire()">Уволить</button>
         </div>
     </div>
 </div>
@@ -2047,17 +2136,200 @@ var currentMetricsTab = 'daily';
 
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(function(b, i) {
-        b.classList.toggle('active', (i === 0 && tab === 'schedule') || (i === 1 && tab === 'metrics'));
+        b.classList.toggle('active', (i === 0 && tab === 'schedule') || (i === 1 && tab === 'metrics') || (i === 2 && tab === 'employees'));
     });
     document.getElementById('tabSchedule').classList.toggle('active', tab === 'schedule');
     document.getElementById('tabMetrics').classList.toggle('active', tab === 'metrics');
+    document.getElementById('tabEmployees').classList.toggle('active', tab === 'employees');
     if (tab === 'metrics') {
         switchMetricsTab(currentMetricsTab);
         loadMetricsAdmin();
     }
+    if (tab === 'employees') {
+        renderEmployeesTab();
+    }
 }
 
-function switchMetricsTab(tab) {
+/* ============================================================
+   УПРАВЛЕНИЕ СОТРУДНИКАМИ
+   ============================================================ */
+function renderEmployeesTab() {
+    var container = document.getElementById('employeesListContent');
+    if (!container) return;
+
+    var list = [];
+    for (var entry of employeesMap.entries()) {
+        var login = entry[0];
+        var info = entry[1];
+        list.push({ login: login, info: info });
+    }
+    list.sort(function(a, b) {
+        var af = !!a.info.date_fired, bf = !!b.info.date_fired;
+        if (af !== bf) return af ? 1 : -1;
+        return (a.info.fullname || '').localeCompare(b.info.fullname || '');
+    });
+
+    var html = '';
+    list.forEach(function(emp) {
+        var info = emp.info;
+        var isFired = !!info.date_fired;
+        html += '<div class="emp-list-row' + (isFired ? ' fired' : '') + '">';
+        html += '<span class="emp-list-name">' + (info.fullname || emp.login) + '</span>';
+        html += '<span class="emp-list-meta">' + (info.category || '—') + ' · ' + (info.percent || 0) + '%</span>';
+        if (isFired) html += '<span class="emp-list-meta" style="color:#c0574a;">уволен ' + formatDisplayDate(info.date_fired) + '</span>';
+        html += '<div class="emp-list-actions">';
+        if (!isFired) {
+            html += '<button class="emp-btn emp-btn-edit" onclick="openEditEmpModal(\'' + emp.login + '\')">Изменить</button>';
+            html += '<button class="emp-btn emp-btn-fire" onclick="openFireModal(\'' + emp.login + '\')">Уволить</button>';
+        } else {
+            html += '<button class="emp-btn emp-btn-rehire" onclick="rehireEmployeeAction(\'' + emp.login + '\')">Восстановить</button>';
+        }
+        html += '</div></div>';
+    });
+
+    if (!html) html = '<p style="color:#aaa;padding:10px;">Нет сотрудников</p>';
+    container.innerHTML = html;
+}
+
+function fillCategorySelect(selectEl) {
+    selectEl.innerHTML = '';
+    allCategories.forEach(function(cat) {
+        var opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        selectEl.appendChild(opt);
+    });
+}
+
+var todayStr = function() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+};
+
+function openHireModal() {
+    document.getElementById('hireLogin').value = '';
+    document.getElementById('hirePass').value = '';
+    document.getElementById('hireFullname').value = '';
+    document.getElementById('hireRole').value = 'employee';
+    fillCategorySelect(document.getElementById('hireCategory'));
+    document.getElementById('hirePercent').value = '';
+    document.getElementById('hireDateFrom').value = todayStr();
+    document.getElementById('hireModal').classList.add('show');
+}
+function closeHireModal() { document.getElementById('hireModal').classList.remove('show'); }
+
+function submitHire() {
+    var login = document.getElementById('hireLogin').value.trim();
+    var pass = document.getElementById('hirePass').value.trim();
+    var fullname = document.getElementById('hireFullname').value.trim();
+    var newRole = document.getElementById('hireRole').value;
+    var category = document.getElementById('hireCategory').value;
+    var percent = document.getElementById('hirePercent').value;
+    var dateFrom = document.getElementById('hireDateFrom').value;
+    if (!login || !pass || !fullname || !dateFrom) { showStatus('Заполните обязательные поля', true); return; }
+
+    var url = SCRIPT_URL + '?action=hireEmployee&role=admin'
+        + '&login=' + encodeURIComponent(login)
+        + '&pass=' + encodeURIComponent(pass)
+        + '&fullname=' + encodeURIComponent(fullname)
+        + '&newRole=' + encodeURIComponent(newRole)
+        + '&category=' + encodeURIComponent(category)
+        + '&percent=' + encodeURIComponent(percent || 0)
+        + '&dateFrom=' + encodeURIComponent(dateFrom);
+
+    fetch(url, { redirect: 'follow' }).then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                showStatus('✓ Сотрудник принят');
+                closeHireModal();
+                refreshData();
+            } else { showStatus('Ошибка: ' + (res.error||''), true); }
+        }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+var editEmpLogin = null;
+
+function openEditEmpModal(login) {
+    editEmpLogin = login;
+    var info = employeesMap.get(login);
+    document.getElementById('editEmpName').textContent = (info ? info.fullname : login) + ' — текущая категория: ' + (info ? info.category : '—') + ', ' + (info ? info.percent : 0) + '%';
+    fillCategorySelect(document.getElementById('editCategory'));
+    if (info) document.getElementById('editCategory').value = info.category;
+    document.getElementById('editPercent').value = '';
+    document.getElementById('editDateFrom').value = todayStr();
+    document.getElementById('editEmpModal').classList.add('show');
+}
+function closeEditEmpModal() { document.getElementById('editEmpModal').classList.remove('show'); editEmpLogin = null; }
+
+function submitEditEmp() {
+    if (!editEmpLogin) return;
+    var category = document.getElementById('editCategory').value;
+    var percent = document.getElementById('editPercent').value;
+    var dateFrom = document.getElementById('editDateFrom').value;
+    if (!dateFrom) { showStatus('Укажите дату', true); return; }
+
+    var calls = [];
+    var info = employeesMap.get(editEmpLogin);
+    if (category && (!info || category !== info.category)) {
+        calls.push(fetch(SCRIPT_URL + '?action=updateEmployeeCategory&role=admin'
+            + '&login=' + encodeURIComponent(editEmpLogin)
+            + '&category=' + encodeURIComponent(category)
+            + '&dateFrom=' + encodeURIComponent(dateFrom)));
+    }
+    if (percent) {
+        calls.push(fetch(SCRIPT_URL + '?action=updateEmployeePercent&role=admin'
+            + '&login=' + encodeURIComponent(editEmpLogin)
+            + '&percent=' + encodeURIComponent(percent)
+            + '&dateFrom=' + encodeURIComponent(dateFrom)));
+    }
+    if (calls.length === 0) { showStatus('Нечего сохранять', true); return; }
+
+    Promise.all(calls).then(function() {
+        showStatus('✓ Сохранено');
+        closeEditEmpModal();
+        refreshData();
+    }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+var fireEmpLogin = null;
+
+function openFireModal(login) {
+    fireEmpLogin = login;
+    var info = employeesMap.get(login);
+    document.getElementById('fireEmpName').textContent = info ? info.fullname : login;
+    document.getElementById('fireDateInput').value = todayStr();
+    document.getElementById('fireModal').classList.add('show');
+}
+function closeFireModal() { document.getElementById('fireModal').classList.remove('show'); fireEmpLogin = null; }
+
+function submitFire() {
+    if (!fireEmpLogin) return;
+    var dateFired = document.getElementById('fireDateInput').value;
+    if (!dateFired) { showStatus('Укажите дату', true); return; }
+
+    var url = SCRIPT_URL + '?action=fireEmployee&role=admin'
+        + '&login=' + encodeURIComponent(fireEmpLogin)
+        + '&dateFired=' + encodeURIComponent(dateFired);
+
+    fetch(url, { redirect: 'follow' }).then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                showStatus('✓ Уволен');
+                closeFireModal();
+                refreshData();
+            } else { showStatus('Ошибка: ' + (res.error||''), true); }
+        }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+function rehireEmployeeAction(login) {
+    var url = SCRIPT_URL + '?action=rehireEmployee&role=admin&login=' + encodeURIComponent(login);
+    fetch(url, { redirect: 'follow' }).then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) { showStatus('✓ Восстановлен'); refreshData(); }
+            else { showStatus('Ошибка', true); }
+        }).catch(function() { showStatus('Ошибка сети', true); });
+}
+
+
     currentMetricsTab = tab;
     document.querySelectorAll('.metrics-sub-btn').forEach(function(b, i) {
         b.classList.toggle('active', (i === 0 && tab === 'daily') || (i === 1 && tab === 'monthly'));
