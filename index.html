@@ -673,6 +673,7 @@
             <div class="metrics-admin-controls">
                 <button onclick="openHireModal()" class="refresh-btn">➕ Принять сотрудника</button>
                 <button id="dualRoleBtn" onclick="openDualRoleModal()" style="background:#b8823e;">👥 Двойная должность</button>
+                <button onclick="openArchiveModal()" style="background:#8a97a8;">🗄 Архивировать месяц</button>
             </div>
             <div id="employeesListContent"></div>
         </div>
@@ -783,6 +784,36 @@
         </div>
         <div class="modal-btns">
             <button class="modal-btn-cancel" onclick="closeAbsenceModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО: АРХИВАЦИЯ МЕСЯЦА ===== -->
+<div id="archiveModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title">🗄 Архивировать месяц</div>
+        <div style="font-size:12px;color:#888;margin-bottom:14px;">
+            Смены за выбранный месяц переносятся в архив и убираются из основной таблицы — это ускоряет загрузку.
+            Данные не удаляются, их можно посмотреть позже — при выборе этого месяца в графике система сама подгрузит архив.
+        </div>
+        <div class="modal-fields">
+            <div class="modal-field-row">
+                <span class="modal-field-label">Месяц</span>
+                <select class="modal-field-input" id="archiveMonth">
+                    <option value="01">Январь</option><option value="02">Февраль</option><option value="03">Март</option>
+                    <option value="04">Апрель</option><option value="05">Май</option><option value="06">Июнь</option>
+                    <option value="07">Июль</option><option value="08">Август</option><option value="09">Сентябрь</option>
+                    <option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option>
+                </select>
+            </div>
+            <div class="modal-field-row">
+                <span class="modal-field-label">Год</span>
+                <input class="modal-field-input" id="archiveYear" type="number" min="2026" value="2026">
+            </div>
+        </div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeArchiveModal()">Отмена</button>
+            <button class="modal-btn-save" style="background:#8a97a8;" onclick="submitArchiveMonth()">Архивировать</button>
         </div>
     </div>
 </div>
@@ -964,13 +995,13 @@ function initMonths() {
         select.appendChild(opt);
     }
     select.addEventListener('change', function() {
-        if (currentUser) renderAll();
+        if (currentUser) checkAndLoadArchiveIfNeeded().then(renderAll);
     });
 
     var yearInput = document.getElementById('yearInput');
     yearInput.addEventListener('change', function() {
         if (parseInt(this.value, 10) < 2026) this.value = 2026;
-        if (currentUser) renderAll();
+        if (currentUser) checkAndLoadArchiveIfNeeded().then(renderAll);
     });
     yearInput.addEventListener('blur', function() {
         if (parseInt(this.value, 10) < 2026) this.value = 2026;
@@ -983,6 +1014,73 @@ function initMonths() {
         if (e.key === 'Enter') document.getElementById('passInput').focus();
     });
 }
+
+/* ============================================================
+   АРХИВАЦИЯ СТАРЫХ МЕСЯЦЕВ
+   ============================================================ */
+var loadedArchiveMonths = {}; // кэш: 'YYYY-MM' -> true, чтобы не грузить архив повторно
+
+function checkAndLoadArchiveIfNeeded() {
+    var month = getSelectedMonth();
+    var year = getSelectedYear();
+    var prefix = year + '-' + String(month).padStart(2, '0');
+
+    if (loadedArchiveMonths[prefix]) return Promise.resolve(); // уже проверяли/грузили
+
+    var hasData = currentScheduleData.some(function(s) { return s.date && s.date.startsWith(prefix); });
+    if (hasData) { loadedArchiveMonths[prefix] = true; return Promise.resolve(); }
+
+    // Данных за этот месяц нет — возможно он в архиве, пробуем подгрузить
+    var url = SCRIPT_URL + '?action=getArchivedSchedule&year=' + year + '&month=' + String(month).padStart(2, '0');
+    return fetch(url, { redirect: 'follow' })
+        .then(function(r) { return r.json(); })
+        .then(function(archived) {
+            loadedArchiveMonths[prefix] = true;
+            if (Array.isArray(archived) && archived.length > 0) {
+                archived.forEach(function(s) {
+                    var d = toYMD(s.date);
+                    if (d !== '') {
+                        currentScheduleData.push({ date: d, empLogin: s.empLogin, isWork: s.isWork, percentOverride: s.percentOverride || 0, shiftComment: s.shiftComment || '', dayType: s.dayType || '' });
+                    }
+                });
+                showStatus('✓ Загружено из архива');
+            }
+        })
+        .catch(function() { loadedArchiveMonths[prefix] = true; });
+}
+
+function openArchiveModal() {
+    document.getElementById('archiveMonth').value = String(getSelectedMonth()).padStart(2, '0');
+    document.getElementById('archiveYear').value = getSelectedYear();
+    document.getElementById('archiveModal').classList.add('show');
+}
+function closeArchiveModal() {
+    document.getElementById('archiveModal').classList.remove('show');
+}
+
+function submitArchiveMonth() {
+    var month = document.getElementById('archiveMonth').value;
+    var year = document.getElementById('archiveYear').value;
+    var monthName = document.getElementById('archiveMonth').selectedOptions[0].textContent;
+
+    if (!confirm('Архивировать ' + monthName + ' ' + year + '? Смены за этот месяц уберутся из основной таблицы (но останутся доступны при выборе этого месяца).')) return;
+
+    var url = SCRIPT_URL + '?action=archiveMonth&role=admin&year=' + year + '&month=' + month;
+    fetch(url, { redirect: 'follow' })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                showStatus('✓ Архивировано смен: ' + res.archivedCount);
+                closeArchiveModal();
+                loadedArchiveMonths = {}; // сбрасываем кэш
+                refreshData();
+            } else {
+                showStatus('Ошибка: ' + (res.error || ''), true);
+            }
+        })
+        .catch(function() { showStatus('Ошибка сети', true); });
+}
+
 
 /* ============================================================
    ПОЛУЧИТЬ ПРОЦЕНТ СОТРУДНИКА НА КОНКРЕТНУЮ ДАТУ
@@ -1441,25 +1539,17 @@ function refreshData() {
     showStatus('Загрузка из облака...');
     debugLog('Загрузка данных...');
 
-    Promise.all([
-        fetch(SCRIPT_URL + '?action=getSchedule', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getFinance', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getEmployees', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getPercentHistory', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getCategoryHistory', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getDualRoles', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getDailyMetrics', { redirect: 'follow' }).then(function(r) { return r.json(); }),
-        fetch(SCRIPT_URL + '?action=getMonthlyMetrics', { redirect: 'follow' }).then(function(r) { return r.json(); })
-    ])
-    .then(function(results) {
-        var scheduleData = results[0];
-        var financeData = results[1];
-        var employeesData = results[2];
-        var percentHistoryData = results[3];
-        var categoryHistoryData = results[4];
-        var dualRolesData = results[5];
-        var dailyMetricsData = results[6];
-        var monthlyMetricsData = results[7];
+    fetch(SCRIPT_URL + '?action=getAllData', { redirect: 'follow' })
+    .then(function(r) { return r.json(); })
+    .then(function(all) {
+        var scheduleData = all.schedule;
+        var financeData = all.finance;
+        var employeesData = all.employees;
+        var percentHistoryData = all.percentHistory;
+        var categoryHistoryData = all.categoryHistory;
+        var dualRolesData = all.dualRoles;
+        var dailyMetricsData = all.dailyMetrics;
+        var monthlyMetricsData = all.monthlyMetrics;
 
         debugLog('Загружено: график=' + scheduleData.length +
             ', финансы=' + financeData.length +
