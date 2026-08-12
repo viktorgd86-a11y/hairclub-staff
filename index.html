@@ -2369,9 +2369,10 @@ function renderEmployeesTab() {
 
     function renderEmpRow(emp, isFired) {
         var info = emp.info;
+        var currentPercent = getPercentForDate(emp.login, todayStr(), employeesMap);
         var row = '<div class="emp-list-row' + (isFired ? ' fired' : '') + '">';
         row += '<span class="emp-list-name">' + (info.fullname || emp.login) + '</span>';
-        row += '<span class="emp-list-meta">' + (info.percent || 0) + '%</span>';
+        row += '<span class="emp-list-meta">' + currentPercent + '%</span>';
         if (isFired) row += '<span class="emp-list-meta" style="color:#ff3b6e;">уволен ' + formatDisplayDate(info.date_fired) + '</span>';
         row += '<div class="emp-list-actions">';
         if (!isFired) {
@@ -2463,7 +2464,8 @@ var editEmpLogin = null;
 function openEditEmpModal(login) {
     editEmpLogin = login;
     var info = employeesMap.get(login);
-    document.getElementById('editEmpName').textContent = (info ? info.fullname : login) + ' — текущая категория: ' + (info ? info.category : '—') + ', ' + (info ? info.percent : 0) + '%';
+    var currentPercent = getPercentForDate(login, todayStr(), employeesMap);
+    document.getElementById('editEmpName').textContent = (info ? info.fullname : login) + ' — текущая категория: ' + (info ? info.category : '—') + ', ' + currentPercent + '%';
     fillCategorySelect(document.getElementById('editCategory'));
     if (info) document.getElementById('editCategory').value = info.category;
     document.getElementById('editPercent').value = '';
