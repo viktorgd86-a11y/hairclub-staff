@@ -796,6 +796,7 @@
             Смены за выбранный месяц переносятся в архив и убираются из основной таблицы — это ускоряет загрузку.
             Данные не удаляются, их можно посмотреть позже — при выборе этого месяца в графике система сама подгрузит архив.
         </div>
+        <div id="archivedMonthsList" style="font-size:12px; color:#555; margin-bottom:16px; padding:10px 12px; background:#f3f6f9; border-radius:8px;">Загрузка списка архива...</div>
         <div class="modal-fields">
             <div class="modal-field-row">
                 <span class="modal-field-label">Месяц</span>
@@ -1049,13 +1050,36 @@ function checkAndLoadArchiveIfNeeded() {
         .catch(function() { loadedArchiveMonths[prefix] = true; });
 }
 
+var MONTH_NAMES_RU = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+
 function openArchiveModal() {
     document.getElementById('archiveMonth').value = String(getSelectedMonth()).padStart(2, '0');
     document.getElementById('archiveYear').value = getSelectedYear();
     document.getElementById('archiveModal').classList.add('show');
+    loadArchivedMonthsList();
 }
 function closeArchiveModal() {
     document.getElementById('archiveModal').classList.remove('show');
+}
+
+function loadArchivedMonthsList() {
+    var el = document.getElementById('archivedMonthsList');
+    el.textContent = 'Загрузка списка архива...';
+    fetch(SCRIPT_URL + '?action=getArchivedMonthsList', { redirect: 'follow' })
+        .then(function(r) { return r.json(); })
+        .then(function(list) {
+            if (!Array.isArray(list) || list.length === 0) {
+                el.innerHTML = '<strong>В архиве пока пусто.</strong>';
+                return;
+            }
+            var items = list.map(function(item) {
+                var parts = item.month.split('-');
+                var name = MONTH_NAMES_RU[parseInt(parts[1], 10) - 1];
+                return name + ' ' + parts[0] + ' (' + item.count + ' смен)';
+            });
+            el.innerHTML = '<strong>Уже в архиве:</strong><br>' + items.join('<br>');
+        })
+        .catch(function() { el.textContent = 'Не удалось загрузить список архива.'; });
 }
 
 function submitArchiveMonth() {
@@ -1065,20 +1089,30 @@ function submitArchiveMonth() {
 
     if (!confirm('Архивировать ' + monthName + ' ' + year + '? Смены за этот месяц уберутся из основной таблицы (но останутся доступны при выборе этого месяца).')) return;
 
+    var el = document.getElementById('archivedMonthsList');
+    el.textContent = 'Архивируем...';
+
     var url = SCRIPT_URL + '?action=archiveMonth&role=admin&year=' + year + '&month=' + month;
     fetch(url, { redirect: 'follow' })
         .then(function(r) { return r.json(); })
         .then(function(res) {
             if (res.success) {
-                showStatus('✓ Архивировано смен: ' + res.archivedCount);
-                closeArchiveModal();
+                if (res.archivedCount > 0) {
+                    el.innerHTML = '<strong style="color:#3f6600;">✓ ' + monthName + ' ' + year + ' помещён в архив (' + res.archivedCount + ' смен).</strong>';
+                } else {
+                    el.innerHTML = '<strong style="color:#8a5a1e;">За ' + monthName + ' ' + year + ' не найдено смен для архивации.</strong>';
+                }
+                showStatus('✓ Готово');
                 loadedArchiveMonths = {}; // сбрасываем кэш
                 refreshData();
+                setTimeout(loadArchivedMonthsList, 1200);
             } else {
-                showStatus('Ошибка: ' + (res.error || ''), true);
+                el.innerHTML = '<strong style="color:#a30030;">Ошибка: ' + (res.error || '') + '</strong>';
             }
         })
-        .catch(function() { showStatus('Ошибка сети', true); });
+        .catch(function() {
+            el.innerHTML = '<strong style="color:#a30030;">Ошибка сети.</strong>';
+        });
 }
 
 
