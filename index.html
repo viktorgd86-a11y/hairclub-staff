@@ -75,15 +75,7 @@
         .manager-table thead tr:nth-child(2) th:first-child { z-index: 150; }
 
         /* Первая ячейка строк категорий наследует цвет от cat-* */
-        .cat-master td:first-child     { background: #e6f6ff !important; }
-        .cat-admin td:first-child      { background: #eeffd6 !important; }
-        .cat-capsulator td:first-child { background: #e2e6ec !important; }
-        .cat-cleaner td:first-child    { background: #f0e6cf !important; }
-        .cat-pomoga td:first-child     { background: #fff0f3 !important; }
-        .cat-manager td:first-child    { background: #c7dde2 !important; }
-        .cat-upravlyayuschiy td:first-child { background: #f0ddc0 !important; }
-        .cat-assistant td:first-child { background: #e6ebf0 !important; }
-        .cat-smm td:first-child       { background: #ffe4e6 !important; }
+        /* Категории теперь различаются только цветной полоской слева у заголовка группы, см. .category-header ниже */
 
 
 
@@ -254,7 +246,6 @@
         }
         .fact-input:focus { outline: 1px solid #0ea5ff; background: white; }
 
-        .category-header { font-weight: bold; text-align: left; padding: 6px 8px; }
 
         /* ===== БЛОК РАСЧЁТА СОТРУДНИКА ===== */
         .earn-block {
@@ -313,15 +304,19 @@
         .earn-card.accent .earn-card-value { color: #3f6600; }
 
         /* ===== ЦВЕТА КАТЕГОРИЙ — фон всей строки ===== */
-        .cat-master td      { background: #e6f6ff !important; color: #0077b3; font-weight: bold; }
-        .cat-admin td       { background: #eeffd6 !important; color: #3f6600; font-weight: bold; }
-        .cat-capsulator td  { background: #e2e6ec !important; color: #3d4c5c; font-weight: bold; }
-        .cat-cleaner td     { background: #f0e6cf !important; color: #8a6a2e; font-weight: bold; }
-        .cat-pomoga td      { background: #fff0f3 !important; color: #a30030; font-weight: bold; }
-        .cat-manager td     { background: #c7dde2 !important; color: #1f5258; font-weight: bold; }
-        .cat-upravlyayuschiy td { background: #f0ddc0 !important; color: #8a5a1e; font-weight: bold; }
-        .cat-assistant td { background: #e6ebf0 !important; color: #3d5468; font-weight: bold; }
-        .cat-smm td       { background: #ffe4e6 !important; color: #a30030; font-weight: bold; }
+        .category-header {
+            font-weight: bold; text-align: left; padding: 6px 10px;
+            background: #fafafa !important; font-size: 12px;
+        }
+        .cat-master td      { border-left: 3px solid #0ea5ff; color: #555; }
+        .cat-admin td       { border-left: 3px solid #5a8fa8; color: #555; }
+        .cat-capsulator td  { border-left: 3px solid #8a97a8; color: #555; }
+        .cat-cleaner td     { border-left: 3px solid #a89a7a; color: #555; }
+        .cat-pomoga td      { border-left: 3px solid #b06a70; color: #555; }
+        .cat-manager td     { border-left: 3px solid #2f6d74; color: #555; }
+        .cat-upravlyayuschiy td { border-left: 3px solid #b8823e; color: #555; }
+        .cat-assistant td { border-left: 3px solid #7a8590; color: #555; }
+        .cat-smm td       { border-left: 3px solid #9a7a85; color: #555; }
         /* ============================================== */
 
 
