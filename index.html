@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>Учёт смен сотрудников</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; margin: 20px; background: #fafafa; }
+        body { font-family: 'Manrope', Arial, sans-serif; margin: 20px; background: #fafafa; }
 
         .login-container {
             max-width: 400px; margin: 50px auto; padding: 30px; background: white;
@@ -333,12 +336,16 @@
         button {
             margin: 5px; padding: 8px 16px; background: #0ea5ff;
             color: white; border: none; border-radius: 6px; cursor: pointer;
+            font-family: inherit; font-weight: 600; font-size: 13px;
+            transition: background-color 0.15s ease, transform 0.1s ease;
         }
+        button:hover { filter: brightness(0.93); }
+        button:active { transform: scale(0.97); }
         .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
         .logout-btn { background: #ff3b6e; }
         .refresh-btn { background: #0ea5ff; }
         .warning { color: #ff3b6e; font-size: 12px; margin-top: 5px; }
-        .welcome { margin-bottom: 12px; font-size: 20px; color: #1a1a1a; font-weight: bold; }
+        .welcome { margin-bottom: 12px; font-size: 21px; color: #1a1a1a; font-weight: 700; letter-spacing: -0.01em; }
         .app-header { background: white; border-radius: 12px; padding: 18px 24px 14px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
         .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
         .toast {
@@ -631,9 +638,9 @@
 
     <!-- Вкладки (только для admin) -->
     <div id="tabsBar" style="display:none;" class="tabs">
-        <button class="tab-btn active" onclick="switchTab('schedule')">📅 График</button>
-        <button class="tab-btn" onclick="switchTab('metrics')">📊 Показатели</button>
-        <button class="tab-btn" onclick="switchTab('employees')">👤 Сотрудники</button>
+        <button class="tab-btn active" onclick="switchTab('schedule')">График</button>
+        <button class="tab-btn" onclick="switchTab('metrics')">Показатели</button>
+        <button class="tab-btn" onclick="switchTab('employees')">Сотрудники</button>
     </div>
 
     <!-- Вкладка: График -->
@@ -641,7 +648,7 @@
         <div id="mainTableContainer" class="table-container"></div>
         <div id="mobileScheduleContainer" style="display:none;"></div>
         <div id="managerSection" style="display:none;">
-            <div class="manager-title">📋 Администрация</div>
+            <div class="manager-title">Администрация</div>
             <div id="managerTableContainer" class="manager-table-container"></div>
         </div>
     </div>
@@ -655,7 +662,7 @@
                 <button onclick="loadMetricsAdmin()" class="refresh-btn">🔄 Загрузить</button>
             </div>
             <div class="metrics-sub-tabs">
-                <button class="metrics-sub-btn active" onclick="switchMetricsTab('daily')">📅 Ежедневные</button>
+                <button class="metrics-sub-btn active" onclick="switchMetricsTab('daily')">Ежедневные</button>
                 <button class="metrics-sub-btn" onclick="switchMetricsTab('monthly')">📆 Ежемесячные</button>
             </div>
             <div id="metricsAdminContent"></div>
@@ -666,9 +673,9 @@
     <div id="tabEmployees" class="tab-content">
         <div class="metrics-admin-block">
             <div class="metrics-admin-controls">
-                <button onclick="openHireModal()" class="refresh-btn">➕ Принять сотрудника</button>
-                <button id="dualRoleBtn" onclick="openDualRoleModal()" style="background:#b8823e;">👥 Двойная должность</button>
-                <button onclick="openArchiveModal()" style="background:#8a97a8;">🗄 Архивировать месяц</button>
+                <button onclick="openHireModal()" class="refresh-btn">Принять сотрудника</button>
+                <button id="dualRoleBtn" onclick="openDualRoleModal()" style="background:#b8823e;">Двойная должность</button>
+                <button onclick="openArchiveModal()" style="background:#8a97a8;">Архивировать месяц</button>
             </div>
             <div id="employeesListContent"></div>
         </div>
@@ -706,7 +713,7 @@
 <!-- ===== МОДАЛЬНОЕ ОКНО: ПРИЁМ СОТРУДНИКА ===== -->
 <div id="hireModal" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-title">➕ Принять сотрудника</div>
+        <div class="modal-title">Принять сотрудника</div>
         <div class="modal-fields">
             <div class="modal-field-row"><span class="modal-field-label">Логин</span><input class="modal-field-input" id="hireLogin" type="text" placeholder="ivan"></div>
             <div class="modal-field-row"><span class="modal-field-label">Пароль</span><input class="modal-field-input" id="hirePass" type="text" placeholder="пароль"></div>
@@ -786,7 +793,7 @@
 <!-- ===== МОДАЛЬНОЕ ОКНО: АРХИВАЦИЯ МЕСЯЦА ===== -->
 <div id="archiveModal" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-title">🗄 Архивировать месяц</div>
+        <div class="modal-title">Архивировать месяц</div>
         <div style="font-size:12px;color:#888;margin-bottom:14px;">
             Смены за выбранный месяц переносятся в архив и убираются из основной таблицы — это ускоряет загрузку.
             Данные не удаляются, их можно посмотреть позже — при выборе этого месяца в графике система сама подгрузит архив.
@@ -817,7 +824,7 @@
 <!-- ===== МОДАЛЬНОЕ ОКНО: ДВОЙНАЯ ДОЛЖНОСТЬ ===== -->
 <div id="dualRoleModal" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-title">👥 Двойная должность</div>
+        <div class="modal-title">Двойная должность</div>
         <div style="font-size:12px;color:#888;margin-bottom:12px;">Выберите сотрудника и укажите два процента с подписями</div>
         <div id="dualEmpList" class="modal-emp-list"></div>
         <div id="dualFields" class="modal-fields" style="display:none;">
@@ -1972,7 +1979,7 @@ function renderMainTable(groups, dates, financeMap) {
         if (!employees || !employees.length) continue;
 
         var catClass = getCategoryClass(category);
-        html += '<tr class="category-header ' + catClass + '"><td colspan="' + colCount + '" style="text-align:left;">📁 ' + category + '</td></tr>';
+        html += '<tr class="category-header ' + catClass + '"><td colspan="' + colCount + '" style="text-align:left;">' + category + '</td></tr>';
 
         for (var ei = 0; ei < employees.length; ei++) {
             var emp = employees[ei];
@@ -2120,7 +2127,7 @@ function renderAdminTable(adminGroups, financeMap, dates) {
             html += '<th></th><th></th></tr>';
 
             html += '</thead><tbody>';
-            html += '<tr class="category-header ' + catClass + '"><td colspan="' + colCount + '" style="text-align:left;">📁 ' + group.category + '</td></tr>';
+            html += '<tr class="category-header ' + catClass + '"><td colspan="' + colCount + '" style="text-align:left;">' + group.category + '</td></tr>';
 
             for (var ei = 0; ei < group.employees.length; ei++) {
                 var emp = group.employees[ei];
@@ -3053,7 +3060,7 @@ function renderMetrics() {
         if (m._sheet === 'managers' && m.month === monthKey) myManagerMonthly = m;
     }
 
-    var titlePrefix = isDual ? '📊 Ваши показатели (двойная должность) — ' : '📊 Ваши показатели — ';
+    var titlePrefix = isDual ? 'Ваши показатели (двойная должность) — ' : 'Ваши показатели — ';
     html += '<div class="metrics-block">';
     html += '<div class="metrics-title">' + titlePrefix + periodLabel + '</div>';
 
@@ -3068,7 +3075,7 @@ function renderMetrics() {
             totCosm  += parseFloat(d.cosmetics)||0;
             totHair  += parseFloat(d.hair_sales)||0;
         });
-        if (isDual) html += '<div class="metrics-section-label" style="color:#b8823e;">🎨 За мастера — продажи</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#b8823e;">За мастера — продажи</div>';
         else        html += '<div class="metrics-section-label">Продажи за месяц</div>';
         html += '<div class="metrics-cards">';
         html += mCard('accent-green',  'Доп. продажи',   formatNumber(totSales) + ' ₽', '💰');
@@ -3084,7 +3091,7 @@ function renderMetrics() {
     // ---- БЛОК KPI МАСТЕРА ----
     if (myMasterMonthly && (category === 'Мастер' || isDual)) {
         hasAnyData = true;
-        if (isDual) html += '<div class="metrics-section-label" style="color:#b8823e;">🎨 За мастера — качество</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#b8823e;">За мастера — качество</div>';
         else        html += '<div class="metrics-section-label">Качество работы</div>';
         html += '<div class="metrics-cards">';
         var complaints = parseInt(myMasterMonthly.complaints)||0;
@@ -3099,7 +3106,7 @@ function renderMetrics() {
     // ---- БЛОК KPI АДМИНИСТРАТОРА ----
     if (myAdminMonthly && (category === 'Администратор' || isDual)) {
         hasAnyData = true;
-        if (isDual) html += '<div class="metrics-section-label" style="color:#0ea5ff;">🗂 За администратора</div>';
+        if (isDual) html += '<div class="metrics-section-label" style="color:#0ea5ff;">За администратора</div>';
         else        html += '<div class="metrics-section-label">За месяц</div>';
         html += '<div class="metrics-cards">';
         var reviews  = parseInt(myAdminMonthly.reviews)||0;
@@ -3128,7 +3135,7 @@ function renderMetrics() {
             html += '<div class="metrics-cards">';
             html += mCard('accent-blue',  'Новые',  s.new,   '🆕');
             html += mCard('',             'Старые', s.old,   '🔄');
-            html += mCard('accent-green', 'Общие',  s.total, '📋');
+            html += mCard('accent-green', 'Общие',  s.total, '');
             html += mKpiCard('Конверсия', s.conv, s.conv>=30?'✅':s.conv>=15?'⚠️':'❌', s.conv>=30?'green':s.conv>=15?'orange':'red', '%');
             html += '</div>';
         });
