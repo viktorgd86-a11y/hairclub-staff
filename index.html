@@ -3193,7 +3193,7 @@ function buildManagerChart(sections) {
     if (maxVal === 0) return '';
 
     var barW = 20, gap = 5, groupGap = 28;
-    var colors = ['#0ea5ff','#7bc300','#b8823e'];
+    var colors = ['#0ea5ff','#8a97a8','#b8823e'];
     var keys = ['new','old','total'];
     var keyLabels = ['Новые','Старые','Общие'];
 
@@ -3218,8 +3218,12 @@ function buildManagerChart(sections) {
                '<text x="'+(padL+i*75+12)+'" y="13" font-size="9" fill="#555">'+l+'</text>';
     }).join('');
 
-    return '<div class="chart-wrap" style="margin-top:14px;">' +
-        '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">' +
+    var chartSummary = sections.map(function(s) {
+        return s.name + ': новые ' + s.new + ', старые ' + s.old + ', общие ' + s.total + ', конверсия ' + s.conv + '%';
+    }).join('. ');
+
+    return '<div class="chart-wrap" style="margin-top:14px;" role="img" aria-label="Диаграмма показателей отдела. ' + chartSummary + '">' +
+        '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">' +
         legend + bars + xLabels + '</svg></div>';
 }
 
@@ -3289,8 +3293,13 @@ function buildMetricsChart(data) {
     // Горизонтальная линия основания
     var baseline = '<line x1="'+padL+'" y1="'+(padT+chartH)+'" x2="'+(W-padR)+'" y2="'+(padT+chartH)+'" stroke="#eee" stroke-width="1"/>';
 
-    return '<div class="chart-wrap" style="margin-top:10px;">' +
-        '<svg class="chart-svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">' +
+    var totalSalesSum = days.reduce(function(s,d){return s+(parseFloat(d.extra_sales)||0);}, 0);
+    var totalCosmSum  = days.reduce(function(s,d){return s+(parseFloat(d.cosmetics)||0);}, 0);
+    var totalHairSum  = days.reduce(function(s,d){return s+(parseFloat(d.hair_sales)||0);}, 0);
+    var chartSummary = 'Динамика продаж по ' + days.length + ' дням с данными. Итого: доп. продажи ' + formatNumber(totalSalesSum) + ' ₽, косметика ' + formatNumber(totalCosmSum) + ' ₽, продажа волос ' + formatNumber(totalHairSum) + ' ₽.';
+
+    return '<div class="chart-wrap" style="margin-top:10px;" role="img" aria-label="' + chartSummary + '">' +
+        '<svg class="chart-svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">' +
         baseline + bars + labels + legend +
         '</svg></div>';
 }
