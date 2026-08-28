@@ -2917,7 +2917,13 @@ function loadMetricsAdmin() {
     }
 
     if (!html) html = '<p style="color:#aaa;padding:10px;">Нет сотрудников с настроенными показателями</p>';
+    var firstMaster = (byCategory['Мастер'] || [])[0];
+    if (firstMaster) {
+        console.log('[DEBUG] Значение для ' + firstMaster.login + ' на дату ' + date + ': extra_sales=' + getDailyMetricValue(firstMaster.login, date, 'extra_sales') + ' | всего записей в dailyMetrics=' + dailyMetrics.length);
+    }
+    console.log('[DEBUG] html.length=' + html.length + ' container до обновления innerHTML.length=' + container.innerHTML.length);
     container.innerHTML = html;
+    console.log('[DEBUG] container ПОСЛЕ innerHTML.length=' + container.innerHTML.length);
 }
 
 function getDailyMetricTotal(login, currentDate, field) {
