@@ -2807,6 +2807,8 @@ function loadMetricsAdmin() {
         byCategory[cat].push({ login: login, fullname: info.fullname, category: cat });
     }
 
+    console.log('[DEBUG] byCategory keys=' + JSON.stringify(Object.keys(byCategory)) + ' DAILY_FIELDS keys=' + JSON.stringify(Object.keys(DAILY_FIELDS)) + ' Мастер count=' + ((byCategory['Мастер']||[]).length));
+
     var html = '';
 
     if (currentMetricsTab === 'daily') {
