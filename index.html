@@ -2792,6 +2792,7 @@ function loadMetricsAdmin() {
     var date = document.getElementById('metricsDateInput').value;
     var month = document.getElementById('metricsMonthInput').value;
     var container = document.getElementById('metricsAdminContent');
+    console.log('[DEBUG] loadMetricsAdmin: date=' + date + ' month=' + month + ' currentMetricsTab=' + currentMetricsTab + ' employeesMap.size=' + employeesMap.size);
 
     // Собираем сотрудников по категориям
     var byCategory = {};
