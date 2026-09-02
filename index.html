@@ -2441,7 +2441,6 @@ function switchTab(tab) {
     document.getElementById('tabEmployees').classList.toggle('active', tab === 'employees');
     if (tab === 'metrics') {
         switchMetricsTab(currentMetricsTab);
-        loadMetricsAdmin();
     }
     if (tab === 'employees') {
         renderEmployeesTab();
@@ -2917,13 +2916,6 @@ function loadMetricsAdmin() {
     }
 
     if (!html) html = '<p style="color:#aaa;padding:10px;">Нет сотрудников с настроенными показателями</p>';
-    var firstMaster = (byCategory['Мастер'] || [])[0];
-    var debugMsg = 'Дата: ' + date + '\nВсего записей в dailyMetrics: ' + dailyMetrics.length;
-    if (firstMaster) {
-        debugMsg += '\nПервый мастер: ' + firstMaster.login + '\nЗначение extra_sales на эту дату: "' + getDailyMetricValue(firstMaster.login, date, 'extra_sales') + '"';
-    }
-    debugMsg += '\nДлина html перед вставкой: ' + html.length;
-    alert(debugMsg);
     container.innerHTML = html;
 }
 
